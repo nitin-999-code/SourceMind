@@ -16,21 +16,9 @@ import TabBar from '../components/TabBar';
 import ImportantFiles from '../components/ImportantFiles';
 import NewTabModal from '../components/NewTabModal';
 import { useTabStore } from '../store/useTabStore';
+import { theme as T } from '../lib/theme';
 
 const API_URL = 'https://sourcemind.onrender.com/api';
-
-/* ═══════════════ DESIGN TOKENS ═══════════════ */
-const T = {
-  bg:      '#0A1A2F',
-  bgSec:   '#0F243D',
-  card:    '#162B4A',
-  accent:  '#2563EB',
-  accentH: '#1D4ED8',
-  text:    '#F1F5F9',
-  muted:   '#94A3B8',
-  border:  'rgba(255,255,255,0.08)',
-  shadow:  'rgba(0,0,0,0.45)',
-};
 
 /* ═══════════════ FETCH ═══════════════ */
 const fetchRepoData = async (url: string) => {

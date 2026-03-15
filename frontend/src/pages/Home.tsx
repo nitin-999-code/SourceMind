@@ -6,20 +6,7 @@ import {
   Code2, Terminal, Braces, Search,
   BarChart3, GitBranch, Layers, ChevronRight
 } from 'lucide-react';
-
-/* ═══════════════ PALETTE ═══════════════ */
-const P = {
-  bg:      '#0A1A2F',
-  bgDark:  '#071525',
-  surface: '#1F2937',
-  accent:  '#2563EB',
-  accentH: '#1D4ED8',
-  text:    '#F1F1F1',
-  muted:   '#9CA3AF',
-  border:  'rgba(255,255,255,0.06)',
-  glass:   'rgba(255,255,255,0.04)',
-  glassB:  'rgba(255,255,255,0.08)',
-};
+import { theme as P } from '../lib/theme';
 
 /* ═══════════════ LOGO ═══════════════ */
 function Logo({ size = 28 }: { size?: number }) {

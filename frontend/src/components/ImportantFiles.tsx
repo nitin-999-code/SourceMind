@@ -1,17 +1,7 @@
 import { useState, useMemo } from 'react';
 import { FileCode, ExternalLink, ChevronDown, ChevronUp, FolderCog, FileText, Wrench, Package } from 'lucide-react';
 import { CopyButton } from './CopyButton';
-
-/* ═══════════════ DESIGN TOKENS ═══════════════ */
-const T = {
-  bg:      '#0A1A2F',
-  bgSec:   '#0F243D',
-  card:    '#162B4A',
-  accent:  '#2563EB',
-  text:    '#F1F5F9',
-  muted:   '#94A3B8',
-  border:  'rgba(255,255,255,0.08)',
-};
+import { theme as T } from '../lib/theme';
 
 /* ═══════════════ FILE CATEGORIZATION ═══════════════ */
 const PRIORITY_FILES = new Set([

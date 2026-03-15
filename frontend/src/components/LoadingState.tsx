@@ -1,16 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-
-/* ═══════════════ DESIGN TOKENS ═══════════════ */
-const T = {
-  bg:      '#0A1A2F',
-  bgSec:   '#0F243D',
-  card:    '#162B4A',
-  accent:  '#2563EB',
-  text:    '#F1F5F9',
-  muted:   '#94A3B8',
-  border:  'rgba(255,255,255,0.08)',
-};
+import { theme as T } from '../lib/theme';
 
 const MESSAGES = [
   "Fetching repository metadata from GitHub...",

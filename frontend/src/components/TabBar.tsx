@@ -1,16 +1,5 @@
 import { X, Plus, Github } from 'lucide-react';
-
-/* ═══════════════ DESIGN TOKENS ═══════════════ */
-const T = {
-  bg:      '#0A1A2F',
-  bgSec:   '#0F243D',
-  card:    '#162B4A',
-  accent:  '#2563EB',
-  accentH: '#1D4ED8',
-  text:    '#F1F5F9',
-  muted:   '#94A3B8',
-  border:  'rgba(255,255,255,0.08)',
-};
+import { theme as T } from '../lib/theme';
 
 interface Tab {
   id: string;
