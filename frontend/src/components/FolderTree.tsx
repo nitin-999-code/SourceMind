@@ -32,7 +32,7 @@ export function FolderTree({ treeData, repoUrl }: { treeData: any[]; repoUrl: st
   const handleFileClick = async (filePath: string) => {
     setSelectedFile({ path: filePath, content: null, loading: true });
     try {
-      const { data } = await axios.post('http://localhost:5001/api/explain-file', { url: repoUrl, filePath });
+      const { data } = await axios.post('https://sourcemind.onrender.com/api/explain-file', { url: repoUrl, filePath });
       setSelectedFile({ path: filePath, content: data.explanation, loading: false });
     } catch (error: any) {
       setSelectedFile({ 

@@ -1,21 +1,23 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   ArrowLeft, Github, FileCode, Server, ListTree, Package, LayoutTemplate, 
-  Star, GitFork, GitCommitHorizontal, Calendar, Disc, AlertCircle, ExternalLink, Activity, Network, ChevronDown, ChevronUp
+  Star, GitFork, GitCommitHorizontal, Calendar, Disc, AlertCircle,
+  Activity, Network, ChevronDown, ChevronUp
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import Chat from '../components/Chat';
 import { CopyButton } from '../components/CopyButton';
 import { FolderTree } from '../components/FolderTree';
 import { LanguageChart } from '../components/LanguageChart';
 import { LoadingState } from '../components/LoadingState';
 import { MarkdownViewer } from '../components/MarkdownViewer';
+import Chat from '../components/Chat';
+import TabBar from '../components/TabBar';
+import ImportantFiles from '../components/ImportantFiles';
+import NewTabModal from '../components/NewTabModal';
+import { useTabStore } from '../store/useTabStore';
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'https://sourcemind.onrender.com/api';
 
 /* ═══════════════ DESIGN TOKENS ═══════════════ */
 const T = {
@@ -30,11 +32,13 @@ const T = {
   shadow:  'rgba(0,0,0,0.45)',
 };
 
+/* ═══════════════ FETCH ═══════════════ */
 const fetchRepoData = async (url: string) => {
   const { data } = await axios.post(`${API_URL}/analyze`, { url });
   return data;
 };
 
+/* ═══════════════ COLLAPSIBLE ═══════════════ */
 function CollapsibleSection({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -123,117 +127,41 @@ function SectionCard({ icon: Icon, title, iconColor, accentBar, children, copyTe
   );
 }
 
-export default function Dashboard() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const urlParams = new URLSearchParams(location.search);
-  const repoUrl = urlParams.get('url');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setMounted(true));
-  }, []);
-
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['repo', repoUrl],
-    queryFn: () => fetchRepoData(repoUrl as string),
-    enabled: !!repoUrl,
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
-
-  if (!repoUrl) {
-    navigate('/');
-    return null;
-  }
-
-  if (isLoading) {
-    return <LoadingState />;
-  }
-
-  if (isError) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ background: T.bg }}>
-        <div className="relative mb-6" style={{ padding: 20, background: 'rgba(239,68,68,0.1)', borderRadius: '50%' }}>
-           <AlertCircle className="w-16 h-16 absolute top-0 -right-2 animate-bounce" style={{ color: '#EF4444' }} />
-           <Github className="w-16 h-16" style={{ color: T.muted }} />
-        </div>
-        <h2 className="text-3xl font-bold tracking-tight" style={{ color: T.text }}>Analysis Failed</h2>
-        <p
-          className="mt-3 max-w-xl text-center text-lg leading-relaxed p-4 rounded-xl"
-          style={{ color: T.muted, background: T.bgSec, border: `1px solid ${T.border}` }}
-        >
-          {axios.isAxiosError(error) ? error.response?.data?.error || error.message : error.message}
-        </p>
-        <button
-          onClick={() => navigate('/')}
-          className="mt-8 h-11 px-6 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg"
-          style={{ background: T.accent, color: '#fff' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = T.accentH; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Check another repository
-        </button>
-      </div>
-    );
-  }
-
+/* ═══════════════ REPO CONTENT (single tab view) ═══════════════ */
+function RepoContent({ data }: { data: any }) {
   const formattedDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(data.metadata.lastUpdated));
 
   return (
-    <div
-      className="min-h-screen pb-20"
-      style={{
-        background: T.bg,
-        color: T.text,
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'opacity 250ms ease-out, transform 250ms ease-out',
-      }}
-    >
-      
+    <>
       {/* ═══════════ HEADER ═══════════ */}
-      <header
-        className="sticky top-0 z-40 w-full px-6 py-4 flex items-center justify-between"
+      <div
+        className="w-full px-6 py-4 flex items-center justify-between"
         style={{
-          background: 'rgba(10,26,47,0.85)',
-          backdropFilter: 'blur(16px)',
+          background: 'rgba(10,26,47,0.6)',
           borderBottom: `1px solid ${T.border}`,
         }}
       >
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/')}
-            className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200"
-            style={{ border: `1px solid ${T.border}`, color: T.muted }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+        <div className="flex items-center gap-3">
+          <div
+            className="p-1 rounded-lg shrink-0"
+            style={{ background: T.bgSec, border: `1px solid ${T.border}` }}
           >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-3">
-            <div
-              className="p-1 rounded-lg shrink-0"
-              style={{ background: T.bgSec, border: `1px solid ${T.border}` }}
-            >
-              {data.metadata.avatarUrl ? (
-                <img src={data.metadata.avatarUrl} alt={data.metadata.owner} className="w-8 h-8 rounded-md object-cover" />
-              ) : (
-                <Github className="w-8 h-8 p-1" style={{ color: T.muted }} />
-              )}
+            {data.metadata.avatarUrl ? (
+              <img src={data.metadata.avatarUrl} alt={data.metadata.owner} className="w-8 h-8 rounded-md object-cover" />
+            ) : (
+              <Github className="w-8 h-8 p-1" style={{ color: T.muted }} />
+            )}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+               <h1 className="font-bold text-xl tracking-tight" style={{ color: T.text }}>
+                 {data.metadata.owner} <span style={{ color: T.muted }}>/</span> {data.metadata.name}
+               </h1>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                 <h1 className="font-bold text-xl tracking-tight" style={{ color: T.text }}>
-                   {data.metadata.owner} <span style={{ color: T.muted }}>/</span> {data.metadata.name}
-                 </h1>
-              </div>
-              {data.metadata.description && (
-                <p className="text-sm mt-0.5 max-w-[600px] truncate" style={{ color: T.muted }}>{data.metadata.description}</p>
-              )}
-              <p className="text-xs hidden sm:block mt-1" style={{ color: T.muted }}>Last updated {formattedDate}</p>
-            </div>
+            {data.metadata.description && (
+              <p className="text-sm mt-0.5 max-w-[600px] truncate" style={{ color: T.muted }}>{data.metadata.description}</p>
+            )}
+            <p className="text-xs hidden sm:block mt-1" style={{ color: T.muted }}>Last updated {formattedDate}</p>
           </div>
         </div>
         <div className="hidden md:flex items-center gap-3 text-sm font-medium">
@@ -264,7 +192,7 @@ export default function Dashboard() {
             View on GitHub
           </a>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
@@ -361,43 +289,18 @@ export default function Dashboard() {
           </SectionCard>
         </div>
 
-        {/* ═══════════ KEY FILES ═══════════ */}
+        {/* ═══════════ KEY FILES (improved) ═══════════ */}
         <SectionCard
           icon={Star}
           title="Important Files Detected"
           iconColor={T.accent}
           accentBar={`linear-gradient(to right, ${T.accent}, #6366F1)`}
         >
-          {data.keyFiles?.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {data.keyFiles.map((file: string) => (
-                <div
-                  key={file}
-                  className="flex items-center gap-1 rounded-lg pr-1 group transition-colors duration-200"
-                  style={{ background: T.bgSec, border: `1px solid ${T.border}` }}
-                >
-                  <a 
-                    href={`${data.metadata.url}/blob/${data.metadata.defaultBranch}/${file}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-2 text-sm font-mono flex items-center gap-2 flex-1"
-                    style={{ color: T.text }}
-                  >
-                    <FileCode className="w-4 h-4" style={{ color: T.accent }} />
-                    {file}
-                    <ExternalLink className="w-3 h-3 ml-1 opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: T.muted }} />
-                  </a>
-                  <div className="pr-1">
-                    <CopyButton text={file} className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm p-4 rounded-lg text-center" style={{ color: T.muted, background: T.bgSec, border: `1px solid ${T.border}` }}>
-              No prominent entry files detected.
-            </p>
-          )}
+          <ImportantFiles
+            keyFiles={data.keyFiles || []}
+            repoUrl={data.metadata.url}
+            defaultBranch={data.metadata.defaultBranch}
+          />
         </SectionCard>
 
         {/* ═══════════ ROW 4: Dependencies & Run Instructions ═══════════ */}
@@ -420,23 +323,207 @@ export default function Dashboard() {
             </CollapsibleSection>
           </SectionCard>
         </div>
-        
-        <div className="flex justify-center pt-8 pb-12">
-          <button
-            onClick={() => navigate('/')}
-            className="h-12 px-8 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-            style={{ background: T.accent, color: '#fff' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = T.accentH; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
-          >
-            Analyze Another Repository
-            <ArrowLeft className="w-4 h-4 rotate-180" />
-          </button>
-        </div>
       </div>
+    </>
+  );
+}
 
-      {/* Floating Chat Interface */}
-      <Chat repoId={data.repoId} repoName={data.metadata.name} />
+/* ═══════════════ ERROR VIEW ═══════════════ */
+function ErrorView({ error, onRetry }: { error: string; onRetry: () => void }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-4" style={{ background: T.bg }}>
+      <div className="relative mb-6" style={{ padding: 20, background: 'rgba(239,68,68,0.1)', borderRadius: '50%' }}>
+         <AlertCircle className="w-16 h-16 absolute top-0 -right-2 animate-bounce" style={{ color: '#EF4444' }} />
+         <Github className="w-16 h-16" style={{ color: T.muted }} />
+      </div>
+      <h2 className="text-3xl font-bold tracking-tight" style={{ color: T.text }}>Analysis Failed</h2>
+      <p
+        className="mt-3 max-w-xl text-center text-lg leading-relaxed p-4 rounded-xl"
+        style={{ color: T.muted, background: T.bgSec, border: `1px solid ${T.border}` }}
+      >
+        {error}
+      </p>
+      <button
+        onClick={onRetry}
+        className="mt-8 h-11 px-6 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg"
+        style={{ background: T.accent, color: '#fff' }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = T.accentH; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Try another repository
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════ EMPTY STATE ═══════════════ */
+function EmptyState({ onNewTab }: { onNewTab: () => void }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center" style={{ background: T.bg }}>
+      <div
+        className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
+        style={{ background: 'rgba(37,99,235,0.08)', border: `1px solid rgba(37,99,235,0.15)` }}
+      >
+        <Github className="w-10 h-10" style={{ color: T.accent }} />
+      </div>
+      <h2 className="text-2xl font-bold mb-2" style={{ color: T.text }}>No Repository Open</h2>
+      <p className="text-sm mb-8 max-w-md" style={{ color: T.muted }}>
+        Open a new tab to analyze a GitHub repository. You can have multiple repositories open simultaneously.
+      </p>
+      <button
+        onClick={onNewTab}
+        className="h-12 px-8 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+        style={{ background: T.accent, color: '#fff' }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = T.accentH; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
+      >
+        <Github className="w-4 h-4" />
+        Analyze a Repository
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════ MAIN DASHBOARD ═══════════════ */
+export default function Dashboard() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const urlParams = new URLSearchParams(location.search);
+  const initialUrl = urlParams.get('url');
+
+  const [mounted, setMounted] = useState(false);
+  const [newTabModalOpen, setNewTabModalOpen] = useState(false);
+  const initializedRef = useRef(false);
+
+  const {
+    tabs,
+    activeTab,
+    activeTabId,
+    addTab,
+    closeTab,
+    switchTab,
+    updateTabData,
+    updateTabError,
+    updateTabChat,
+    setChatOpen,
+    setChatExpanded,
+  } = useTabStore();
+
+  /* ── Fetch repo data for a tab ── */
+  const analyzeRepo = useCallback(async (tabId: string, repoUrl: string) => {
+    try {
+      const data = await fetchRepoData(repoUrl);
+      updateTabData(tabId, data);
+    } catch (err: any) {
+      const errorMsg = axios.isAxiosError(err) 
+        ? err.response?.data?.error || err.message 
+        : err.message;
+      updateTabError(tabId, errorMsg);
+    }
+  }, [updateTabData, updateTabError]);
+
+  /* ── Initialize with URL param ── */
+  useEffect(() => {
+    if (initialUrl && !initializedRef.current) {
+      initializedRef.current = true;
+      const tabId = addTab(initialUrl);
+      analyzeRepo(tabId, initialUrl);
+    }
+  }, [initialUrl, addTab, analyzeRepo]);
+
+  /* ── Mount animation ── */
+  useEffect(() => {
+    requestAnimationFrame(() => setMounted(true));
+  }, []);
+
+  /* ── Handle new tab ── */
+  const handleNewTab = useCallback((url: string) => {
+    setNewTabModalOpen(false);
+    const tabId = addTab(url);
+    analyzeRepo(tabId, url);
+  }, [addTab, analyzeRepo]);
+
+  /* ── Handle close tab → go home if none left ── */
+  const handleCloseTab = useCallback((tabId: string) => {
+    closeTab(tabId);
+    // If this was the last tab, navigate home
+    if (tabs.length <= 1) {
+      navigate('/');
+    }
+  }, [closeTab, tabs.length, navigate]);
+
+  /* ── Navigate home if no URL ── */
+  if (!initialUrl && tabs.length === 0) {
+    navigate('/');
+    return null;
+  }
+
+  return (
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background: T.bg,
+        color: T.text,
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? 'translateY(0)' : 'translateY(12px)',
+        transition: 'opacity 250ms ease-out, transform 250ms ease-out',
+      }}
+    >
+      {/* ═══════════ TAB BAR ═══════════ */}
+      <TabBar
+        tabs={tabs.map(t => ({
+          id: t.id,
+          repoName: t.repoName,
+          owner: t.owner,
+          isLoading: t.isLoading,
+          isError: t.isError,
+        }))}
+        activeTabId={activeTabId}
+        onSwitchTab={switchTab}
+        onCloseTab={handleCloseTab}
+        onNewTab={() => setNewTabModalOpen(true)}
+      />
+
+      {/* Spacer for fixed tab bar */}
+      <div style={{ height: 44 }} />
+
+      {/* ═══════════ TAB CONTENT ═══════════ */}
+      {activeTab ? (
+        activeTab.isLoading ? (
+          <LoadingState />
+        ) : activeTab.isError ? (
+          <ErrorView
+            error={activeTab.error || 'Unknown error'}
+            onRetry={() => setNewTabModalOpen(true)}
+          />
+        ) : activeTab.data ? (
+          <div className="flex-1 pb-20">
+            <RepoContent data={activeTab.data} />
+
+            {/* Per-tab Chat */}
+            <Chat
+              repoId={activeTab.data.repoId}
+              repoName={activeTab.repoName}
+              messages={activeTab.chatMessages}
+              onMessagesChange={(msgs) => updateTabChat(activeTab.id, msgs)}
+              isOpen={activeTab.chatOpen}
+              onOpenChange={(open) => setChatOpen(activeTab.id, open)}
+              isExpanded={activeTab.chatExpanded}
+              onExpandedChange={(expanded) => setChatExpanded(activeTab.id, expanded)}
+            />
+          </div>
+        ) : null
+      ) : (
+        <EmptyState onNewTab={() => setNewTabModalOpen(true)} />
+      )}
+
+      {/* ═══════════ NEW TAB MODAL ═══════════ */}
+      <NewTabModal
+        isOpen={newTabModalOpen}
+        onClose={() => setNewTabModalOpen(false)}
+        onSubmit={handleNewTab}
+      />
     </div>
   );
 }

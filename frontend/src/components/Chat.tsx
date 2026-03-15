@@ -4,8 +4,9 @@ import { MessageSquare, X, Send, Loader2, Maximize2, Minimize2, Trash2 } from 'l
 import { cn } from '../lib/utils';
 import { MarkdownViewer } from './MarkdownViewer';
 import { CopyButton } from './CopyButton';
+import type { ChatMessage } from '../store/useTabStore';
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'https://sourcemind.onrender.com/api';
 
 /* ═══════════════ DESIGN TOKENS ═══════════════ */
 const T = {
@@ -25,12 +26,27 @@ const SUGGESTED_QUESTIONS = [
   "How do I run this project"
 ];
 
-export default function Chat({ repoId, repoName }: { repoId: string, repoName: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const initialMessage = { role: 'assistant' as const, content: `Hello! I have analyzed **${repoName}**. Ask me anything about its architecture, code, or dependencies.` };
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([initialMessage]);
+interface ChatProps {
+  repoId: string;
+  repoName: string;
+  messages: ChatMessage[];
+  onMessagesChange: (messages: ChatMessage[]) => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  isExpanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
+}
+
+export default function Chat({
+  repoId,
+  repoName,
+  messages,
+  onMessagesChange,
+  isOpen,
+  onOpenChange,
+  isExpanded,
+  onExpandedChange,
+}: ChatProps) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -45,28 +61,33 @@ export default function Chat({ repoId, repoName }: { repoId: string, repoName: s
     if (!query || loading) return;
 
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: query }]);
+    const newMessages = [...messages, { role: 'user' as const, content: query }];
+    onMessagesChange(newMessages);
     setLoading(true);
 
     try {
       const { data } = await axios.post(`${API_URL}/chat`, { repoId, message: query });
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+      onMessagesChange([...newMessages, { role: 'assistant' as const, content: data.reply }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Connection error while communicating with the AI. Ensure backend and vector DB are running.' }]);
+      onMessagesChange([...newMessages, { role: 'assistant' as const, content: 'Connection error while communicating with the AI. Ensure backend and vector DB are running.' }]);
     } finally {
       setLoading(false);
     }
   };
 
   const clearChat = () => {
-    setMessages([initialMessage]);
+    const initialMessage: ChatMessage = {
+      role: 'assistant',
+      content: `Hello! I have analyzed **${repoName}**. Ask me anything about its architecture, code, or dependencies.`,
+    };
+    onMessagesChange([initialMessage]);
   };
 
   /* ─── FAB Button ─── */
   if (!isOpen) {
     return (
       <button 
-        onClick={() => setIsOpen(true)}
+        onClick={() => onOpenChange(true)}
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full flex items-center justify-center z-50 transition-all duration-200 hover:scale-105"
         style={{
           background: `linear-gradient(135deg, ${T.accent}, #3B82F6)`,
@@ -112,16 +133,16 @@ export default function Chat({ repoId, repoName }: { repoId: string, repoName: s
       >
         <div className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-white" />
-          <h3 className="font-semibold text-white text-sm">Repository Assistant</h3>
+          <h3 className="font-semibold text-white text-sm">{repoName} Assistant</h3>
         </div>
         <div className="flex items-center gap-0.5">
           <IconBtn onClick={clearChat} title="Clear Chat">
             <Trash2 className="w-4 h-4" />
           </IconBtn>
-          <IconBtn onClick={() => setIsExpanded(!isExpanded)} title={isExpanded ? "Minimize" : "Maximize"}>
+          <IconBtn onClick={() => onExpandedChange(!isExpanded)} title={isExpanded ? "Minimize" : "Maximize"}>
             {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </IconBtn>
-          <IconBtn onClick={() => setIsOpen(false)} title="Close">
+          <IconBtn onClick={() => onOpenChange(false)} title="Close">
             <X className="w-5 h-5" />
           </IconBtn>
         </div>
