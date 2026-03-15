@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  ArrowLeft, Github, FileCode, Server, ListTree, Package, LayoutTemplate, 
+  Github, FileCode, Server, ListTree, Package, LayoutTemplate, 
   Star, GitFork, GitCommitHorizontal, Calendar, Disc, AlertCircle,
   Activity, Network, ChevronDown, ChevronUp
 } from 'lucide-react';
@@ -22,8 +22,20 @@ const API_URL = 'https://sourcemind.onrender.com/api';
 
 /* ═══════════════ FETCH ═══════════════ */
 const fetchRepoData = async (url: string) => {
-  const { data } = await axios.post(`${API_URL}/analyze`, { url });
-  return data;
+  try {
+    const { data } = await axios.post(`${API_URL}/analyze`, { url });
+    return data;
+  } catch (err: any) {
+    // Tag rate-limit errors so the UI can detect them
+    if (err.response?.status === 429 || err.response?.data?.errorType === 'RATE_LIMIT') {
+      const rateLimitError = new Error(
+        err.response?.data?.error || 'AI analysis is temporarily busy. Please try again in a few seconds.'
+      );
+      (rateLimitError as any).isRateLimit = true;
+      throw rateLimitError;
+    }
+    throw err;
+  }
 };
 
 /* ═══════════════ COLLAPSIBLE ═══════════════ */
@@ -317,30 +329,62 @@ function RepoContent({ data }: { data: any }) {
 }
 
 /* ═══════════════ ERROR VIEW ═══════════════ */
-function ErrorView({ error, onRetry }: { error: string; onRetry: () => void }) {
+function ErrorView({ error, onRetry, isRateLimit = false }: { error: string; onRetry: () => void; isRateLimit?: boolean }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4" style={{ background: T.bg }}>
-      <div className="relative mb-6" style={{ padding: 20, background: 'rgba(239,68,68,0.1)', borderRadius: '50%' }}>
-         <AlertCircle className="w-16 h-16 absolute top-0 -right-2 animate-bounce" style={{ color: '#EF4444' }} />
+      <div className="relative mb-6" style={{ padding: 20, background: isRateLimit ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)', borderRadius: '50%' }}>
+         <AlertCircle className="w-16 h-16 absolute top-0 -right-2 animate-bounce" style={{ color: isRateLimit ? '#FBBF24' : '#EF4444' }} />
          <Github className="w-16 h-16" style={{ color: T.muted }} />
       </div>
-      <h2 className="text-3xl font-bold tracking-tight" style={{ color: T.text }}>Analysis Failed</h2>
-      <p
-        className="mt-3 max-w-xl text-center text-lg leading-relaxed p-4 rounded-xl"
-        style={{ color: T.muted, background: T.bgSec, border: `1px solid ${T.border}` }}
-      >
-        {error}
-      </p>
-      <button
-        onClick={onRetry}
-        className="mt-8 h-11 px-6 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg"
-        style={{ background: T.accent, color: '#fff' }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = T.accentH; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Try another repository
-      </button>
+
+      {isRateLimit ? (
+        <>
+          <h2 className="text-3xl font-bold tracking-tight" style={{ color: T.text }}>
+            ⚠ AI Analysis Temporarily Busy
+          </h2>
+          <p
+            className="mt-3 max-w-xl text-center text-lg leading-relaxed p-4 rounded-xl"
+            style={{ color: T.muted, background: T.bgSec, border: `1px solid ${T.border}` }}
+          >
+            AI analysis is temporarily busy. Please try again in a few seconds.
+          </p>
+          <div className="flex items-center gap-4 mt-8">
+            <button
+              onClick={onRetry}
+              id="retry-analysis-btn"
+              className="h-11 px-6 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+              style={{ background: '#FBBF24', color: '#0A1A2F' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#F59E0B'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#FBBF24'; }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              Retry Analysis
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 className="text-3xl font-bold tracking-tight" style={{ color: T.text }}>Analysis Failed</h2>
+          <p
+            className="mt-3 max-w-xl text-center text-lg leading-relaxed p-4 rounded-xl"
+            style={{ color: T.muted, background: T.bgSec, border: `1px solid ${T.border}` }}
+          >
+            {error}
+          </p>
+          <div className="flex items-center gap-4 mt-8">
+            <button
+              onClick={onRetry}
+              className="h-11 px-6 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg"
+              style={{ background: T.accent, color: '#fff' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = T.accentH; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              Retry Analysis
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -404,9 +448,12 @@ export default function Dashboard() {
       const data = await fetchRepoData(repoUrl);
       updateTabData(tabId, data);
     } catch (err: any) {
-      const errorMsg = axios.isAxiosError(err) 
-        ? err.response?.data?.error || err.message 
-        : err.message;
+      const isRateLimit = err?.isRateLimit === true;
+      const errorMsg = isRateLimit
+        ? 'RATE_LIMIT:' + (err.message || 'AI analysis is temporarily busy.')
+        : (axios.isAxiosError(err) 
+          ? err.response?.data?.error || err.message 
+          : err.message);
       updateTabError(tabId, errorMsg);
     }
   }, [updateTabData, updateTabError]);
@@ -483,7 +530,15 @@ export default function Dashboard() {
         ) : activeTab.isError ? (
           <ErrorView
             error={activeTab.error || 'Unknown error'}
-            onRetry={() => setNewTabModalOpen(true)}
+            isRateLimit={activeTab.error?.startsWith('RATE_LIMIT:') || false}
+            onRetry={() => {
+              if (activeTab.repoUrl) {
+                updateTabError(activeTab.id, '');
+                analyzeRepo(activeTab.id, activeTab.repoUrl);
+              } else {
+                setNewTabModalOpen(true);
+              }
+            }}
           />
         ) : activeTab.data ? (
           <div className="flex-1 pb-20">
