@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 215 63% 11%;      /* #0A1A2F */
+    --foreground: 210 40% 96%;      /* #F1F5F9 */
+
+    --card: 213 43% 19%;            /* #162B4A */
+    --card-foreground: 210 40% 96%;
+
+    --popover: 213 43% 19%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 217 91% 60%;         /* #2563EB */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 50% 15%;       /* #0F243D */
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 215 50% 15%;           /* #0F243D */
+    --muted-foreground: 215 16% 65%; /* #94A3B8 */
+
+    --accent: 217 91% 60%;          /* #2563EB */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 30% 18%;          /* rgba(255,255,255,0.08) equivalent */
+    --input: 215 30% 18%;
+    --ring: 217 91% 60%;            /* #2563EB */
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    background: #0A1A2F;
+  }
+}
+
+/* Page transition animation */
+.page-enter {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+
+/* Unified scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.14);
+}
