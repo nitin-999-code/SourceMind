@@ -24,3 +24,4 @@ npm-debug.log*
 # Temporary
 tmp/
 .cache/
+backend/chroma_data/
