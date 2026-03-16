@@ -8,7 +8,7 @@ import {
   Github, ArrowRight, Sparkles, Network,
   Box, FolderTree, Cpu, MessageSquare,
   Code2, Terminal, Braces, Search,
-  BarChart3, GitBranch, Layers, ChevronRight
+  BarChart3, GitBranch, Layers, ChevronRight, Star
 } from 'lucide-react';
 import Logo from './Logo';
 import { theme as P } from '../lib/theme';
@@ -87,6 +87,29 @@ export default function LandingAnalyzer({ onSubmit }: { onSubmit: (url: string) 
       className="flex-1 overflow-y-auto overflow-x-hidden"
       style={{ background: P.bg, color: P.text }}
     >
+      {/* ─── Top bar with brand + Star button ─── */}
+      <div
+        className="sticky top-0 z-10 flex items-center justify-between px-6 py-3"
+        style={{ background: 'rgba(10,26,47,0.8)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${P.border}` }}
+      >
+        <div className="flex items-center gap-2">
+          <Logo size={22} />
+          <span className="text-sm font-semibold tracking-tight" style={{ color: P.text }}>SourceMind</span>
+        </div>
+        <a
+          href="https://github.com/nitin-999-code/SourceMind"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors duration-200"
+          style={{ color: P.muted, border: `1px solid ${P.border}` }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+        >
+          <Star className="w-3.5 h-3.5" />
+          Star on GitHub
+        </a>
+      </div>
+
       {/* ─── HERO ─── */}
       <section className="relative pt-24 pb-28 px-6">
         {/* Spotlight */}
@@ -104,12 +127,12 @@ export default function LandingAnalyzer({ onSubmit }: { onSubmit: (url: string) 
         <FloatIcon icon={Cpu}      style={{ top: '68%', right: '12%', animationDelay: '1s', animationDuration: '7s' }} />
 
         <div className="max-w-3xl mx-auto text-center relative">
-          {/* Badge */}
+          {/* Brand badge with Logo */}
           <div
-            className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-medium mb-8 opacity-0 animate-fade-up"
-            style={{ animationDelay: '0.1s', animationFillMode: 'forwards', background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.2)', color: '#60A5FA' }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-8 opacity-0 animate-fade-up"
+            style={{ animationDelay: '0.1s', animationFillMode: 'forwards', background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.2)', color: P.text }}
           >
-            <Sparkles className="w-3 h-3" /> AI-powered code intelligence
+            <Logo size={16} /> SourceMind
           </div>
 
           {/* Headline */}
