@@ -5,7 +5,7 @@ import {
   Github, FileCode, Server, ListTree, Package, LayoutTemplate, 
   Star, GitFork, GitCommitHorizontal, Calendar, Disc, AlertCircle,
   Activity, Network, ChevronDown, ChevronUp, Play, FolderOpen, Layers,
-  ArrowRight, Sparkles, Search
+  ArrowRight
 } from 'lucide-react';
 import { CopyButton } from '../components/CopyButton';
 import { FolderTree } from '../components/FolderTree';
@@ -596,7 +596,7 @@ function AnalyzerView({ onSubmit }: { onSubmit: (url: string) => void }) {
       {/* Quick picks */}
       <div className="w-full max-w-lg">
         <p className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: T.muted }}>
-          <Sparkles className="w-3 h-3" />
+          <Star className="w-3 h-3" />
           Quick picks
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
