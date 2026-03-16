@@ -132,7 +132,7 @@ function SectionCard({ icon: Icon, title, iconColor, accentBar, children, copyTe
 }
 
 /* ═══════════════ REPO CONTENT (single tab view) ═══════════════ */
-export function RepoContent({ data }: { data: any }) {
+export function RepoContent({ data, isSharedView = false }: { data: any, isSharedView?: boolean }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const formattedDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(data.metadata.lastUpdated));
 
@@ -196,16 +196,18 @@ export function RepoContent({ data }: { data: any }) {
             <Github className="w-4 h-4" />
             View on GitHub
           </a>
-          <button
-            onClick={() => setIsShareModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200"
-            style={{ background: T.accent, color: '#fff', border: `1px solid ${T.accent}` }}
-            onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
-          >
-            <Share2 className="w-4 h-4" />
-            Share Analysis
-          </button>
+          {!isSharedView && (
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200"
+              style={{ background: T.accent, color: '#fff', border: `1px solid ${T.accent}` }}
+              onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
+            >
+              <Share2 className="w-4 h-4" />
+              Share Analysis
+            </button>
+          )}
         </div>
       </div>
       

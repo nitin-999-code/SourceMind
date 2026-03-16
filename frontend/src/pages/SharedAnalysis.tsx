@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { RepoContent, ErrorView } from './Dashboard';
 import { LoadingState } from '../components/LoadingState';
 import { theme as T } from '../lib/theme';
 import Chat from '../components/Chat';
-import { Share2, ArrowRight } from 'lucide-react';
+import { Share2, Github } from 'lucide-react';
 
 const API_URL = 'https://sourcemind.onrender.com/api';
 
@@ -20,6 +20,17 @@ export default function SharedAnalysis() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false);
+
+  // CTA State
+  const [analyzeUrl, setAnalyzeUrl] = useState('');
+  const navigate = useNavigate();
+
+  const handleAnalyzeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (analyzeUrl) {
+      navigate(`/dashboard?url=${encodeURIComponent(analyzeUrl)}`);
+    }
+  };
 
   const fetchAnalysis = async () => {
     if (!owner || !repo) {
@@ -119,25 +130,51 @@ export default function SharedAnalysis() {
               </span>
             </div>
             <p className="text-xs mt-0.5" style={{ color: T.muted }}>
-              This analysis was generated using SourceMind.
+              <Link to="/" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
+                Powered by SourceMind AI
+              </Link>
             </p>
           </div>
         </div>
-        
-        <Link
-          to="/"
-          className="h-10 px-5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 relative z-10"
-          style={{ background: T.accent, color: '#fff', border: `1px solid ${T.accent}` }}
-          onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
-        >
-          Analyze Your Own Repository
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+      </div>
+
+      {/* ═══════════ ANALYZE ANOTHER REPO CTA ═══════════ */}
+      <div 
+        className="w-full px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b"
+        style={{ background: 'rgba(10,26,47,0.4)', borderColor: T.border }}
+      >
+        <span className="text-sm font-medium" style={{ color: T.text }}>
+          Analyze Another Repository
+        </span>
+        <form onSubmit={handleAnalyzeSubmit} className="flex-1 w-full max-w-lg">
+          <div 
+            className="flex items-center gap-2 p-1.5 rounded-lg w-full transition-all duration-200"
+            style={{ background: T.bgSec, border: `1px solid ${T.border}` }}
+          >
+            <Github className="w-4 h-4 ml-2 shrink-0" style={{ color: T.muted }} />
+            <input
+              type="text"
+              value={analyzeUrl}
+              onChange={(e) => setAnalyzeUrl(e.target.value)}
+              placeholder="GitHub Repository URL"
+              className="w-full bg-transparent text-sm outline-none"
+              style={{ color: T.text }}
+            />
+            <button
+              type="submit"
+              className="h-8 px-4 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 shrink-0"
+              style={{ background: T.accent, color: '#fff' }}
+              onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
+            >
+              Analyze Repository
+            </button>
+          </div>
+        </form>
       </div>
 
       <div className="flex-1 pb-20">
-        <RepoContent data={data} />
+        <RepoContent data={data} isSharedView={true} />
       </div>
       
       <Chat
