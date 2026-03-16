@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { theme as P } from '../lib/theme';
 import Logo from '../components/Logo';
+import DemoPreview from '../components/DemoPreview';
 
 
 /* ═══════════════ SCROLL REVEAL ═══════════════ */
@@ -211,81 +212,7 @@ export default function Home() {
       </section>
 
       {/* ─── DEMO ─── */}
-      <section className="px-6 py-24" ref={observe('demo')}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">See it in action</h2>
-            <p className="text-sm max-w-md mx-auto" style={{ color: P.muted }}>
-              A dashboard designed for clarity, not clutter.
-            </p>
-          </div>
-
-          <div
-            className={`rounded-2xl overflow-hidden transition-all duration-700 ${vis['demo'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
-            style={{ background: P.surface, border: `1px solid ${P.border}`, boxShadow: '0 24px 48px rgba(0,0,0,0.35)' }}
-          >
-            {/* Browser chrome */}
-            <div className="flex items-center px-5 py-3 border-b" style={{ borderColor: P.border, background: 'rgba(10,26,47,0.5)' }}>
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
-                <div className="w-3 h-3 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
-                <div className="w-3 h-3 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
-              </div>
-              <div className="flex-1 flex justify-center">
-                <div className="px-4 py-1 rounded-md text-[11px]" style={{ background: P.glass, border: `1px solid ${P.border}`, color: P.muted }}>
-                  sourcemind.ai/dashboard
-                </div>
-              </div>
-            </div>
-
-            {/* Dashboard wireframe */}
-            <div className="p-6 md:p-8" style={{ background: P.bg }}>
-              {/* Header */}
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-lg" style={{ background: 'rgba(37,99,235,0.1)', border: `1px solid rgba(37,99,235,0.15)` }} />
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-28 h-3 rounded" style={{ background: 'rgba(255,255,255,0.08)' }} />
-                    <div className="w-16 h-3 rounded" style={{ background: 'rgba(255,255,255,0.05)' }} />
-                  </div>
-                  <div className="w-40 h-2 rounded" style={{ background: 'rgba(255,255,255,0.04)' }} />
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-5 gap-2 mb-5">
-                {['★ 218k', '⑂ 44.5k', '● 1.2k', '⎇ main', '📅 2d ago'].map((s, i) => (
-                  <div key={i} className="rounded-lg py-2.5 text-center text-[11px]" style={{ background: P.surface, border: `1px solid ${P.border}`, color: P.muted }}>
-                    {s}
-                  </div>
-                ))}
-              </div>
-
-              {/* Panels */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                {[P.accent, '#6366F1'].map((c, i) => (
-                  <div key={i} className="rounded-lg p-5" style={{ background: P.surface, border: `1px solid ${P.border}` }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-1 h-5 rounded-full" style={{ background: c }} />
-                      <div className="w-24 h-3 rounded" style={{ background: 'rgba(255,255,255,0.07)' }} />
-                    </div>
-                    <div className="space-y-2">
-                      {[100, 85, 65, 75].map((w, j) => (
-                        <div key={j} className="h-2 rounded-full" style={{ width: `${w}%`, background: 'rgba(255,255,255,0.04)' }} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-20 rounded-lg" style={{ background: P.surface, border: `1px solid ${P.border}` }} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <DemoPreview onTryDemo={(url) => navigate(`/dashboard?url=${encodeURIComponent(url)}`)} />
 
       {/* ─── HOW IT WORKS ─── */}
       <section className="px-6 py-28" ref={observe('how')}>
