@@ -118,14 +118,14 @@ Metadata: ${JSON.stringify(metadata)}
 File Structure (first 150 files):
 ${treeString}
 
-package.json:
+Dependency Files:
 ${pkgString}
 
 Return EXACTLY this JSON structure:
 {
   "summary": "Markdown with headers: ### Project Purpose, ### Key Features, ### Use Cases — use concise bullet points.",
   "folderExplanation": "Markdown explaining the folder structure and its purpose with concise bullet points.",
-  "techStack": "Markdown list of frameworks and libraries detected from the package.json.",
+  "techStack": "Markdown list of frameworks and libraries detected from the dependency files.",
   "dependenciesExplanation": "Markdown formatted as a bulleted list under header ### Dependencies, explaining each dependency and its role.",
   "architecture": "Markdown formatted as a bulleted list under ### Architecture Overview giving a high-level system architecture overview.",
   "runInstructions": "Markdown with ### How To Run The Project header, step-by-step instructions including bash code blocks.",

@@ -1,23 +1,26 @@
 import { fetchRepoMetadata, fetchRepoTree, fetchFileContent, fetchRepoLanguages } from '../services/githubService.js';
 import { generateCompletion, generateStructuredAnalysis, chatWithContext, sleep } from '../services/groqService.js';
 import { storeDocuments, queryDocuments } from '../services/chromaService.js';
+import { getTopImportantFiles } from '../services/fileScoring.js';
+import { detectDependencies, detectFrameworksFromImports } from '../services/dependencyDetector.js';
 
 // ═══════════════ CACHING & DEDUP ═══════════════
 
 /**
- * Full analysis result cache — keyed by "owner_repo".
- * Stores the complete response so repeat requests return instantly.
+ * Full analysis result cache — keyed by the NORMALIZED repo URL.
+ * This ensures each repo is completely isolated.
  */
 const analysisCache = new Map();
 
 /**
  * Chat context cache — lightweight repo context for the chat feature.
+ * Also keyed by normalized repo URL.
  */
-const repoCache = new Map();
+const chatContextCache = new Map();
 
 /**
- * In-progress tracker — prevents duplicate simultaneous analyses of the same repo.
- * Maps repoName → Promise<result> so concurrent requests await the same work.
+ * In-progress tracker — prevents duplicate simultaneous analyses.
+ * Keyed by normalized repo URL.
  */
 const inProgress = new Map();
 
@@ -27,6 +30,16 @@ const parseGitHubUrl = (url) => {
   const match = url.match(/github\.com\/([^/]+)\/([^/]+)/);
   if (!match) return null;
   return { owner: match[1], repo: match[2].replace('.git', '') };
+};
+
+/**
+ * Normalize a GitHub URL to a consistent cache key.
+ * e.g. "https://github.com/facebook/react" → "github.com/facebook/react"
+ */
+const normalizeCacheKey = (url) => {
+  const parsed = parseGitHubUrl(url);
+  if (!parsed) return url;
+  return `github.com/${parsed.owner}/${parsed.repo}`.toLowerCase();
 };
 
 /**
@@ -44,10 +57,12 @@ const isRateLimitError = (error) => {
 // ═══════════════ CORE ANALYSIS LOGIC ═══════════════
 
 /**
- * Performs the actual repository analysis work. Isolated so it can be
- * shared by concurrent requests via the inProgress map.
+ * Performs the actual repository analysis work.
  */
-const performAnalysis = async (owner, repo, repoName) => {
+const performAnalysis = async (owner, repo, repoUrl) => {
+  const repoName = `${owner}_${repo}`;
+  const cacheKey = normalizeCacheKey(repoUrl);
+
   // 1. Fetch metadata & languages in parallel
   const [metadata, languages] = await Promise.all([
     fetchRepoMetadata(owner, repo),
@@ -62,30 +77,33 @@ const performAnalysis = async (owner, repo, repoName) => {
     throw new Error('Could not fetch repository tree.');
   }
 
-  // Filter tree
+  // Filter tree — exclude noise
   const filePaths = treeData.tree
     .filter(
       (item) =>
         item.type === 'blob' &&
         !item.path.includes('node_modules') &&
-        !item.path.includes('.git/')
+        !item.path.includes('.git/') &&
+        !item.path.includes('__pycache__') &&
+        !item.path.includes('.next/') &&
+        !item.path.includes('dist/') &&
+        !item.path.includes('build/') &&
+        !item.path.includes('vendor/')
     )
     .map((item) => item.path);
 
   // Limit tree size for LLM token context
   const treeString = filePaths.slice(0, 150).join('\n');
 
-  // 3. Fetch package.json
-  let packageJson = null;
-  let numDependencies = 0;
-  const pkgContent = await fetchFileContent(owner, repo, 'package.json');
-  if (pkgContent) {
-    try {
-      packageJson = JSON.parse(pkgContent);
-      numDependencies =
-        Object.keys(packageJson.dependencies || {}).length +
-        Object.keys(packageJson.devDependencies || {}).length;
-    } catch (e) {}
+  // 3. Multi-ecosystem dependency detection
+  const depResult = await detectDependencies(owner, repo, filePaths);
+  const numDependencies = depResult.totalDeps;
+  const depString = depResult.depString;
+
+  // If no dependency files found, detect frameworks from imports
+  let detectedFrameworks = [];
+  if (depResult.ecosystems.length === 0) {
+    detectedFrameworks = await detectFrameworksFromImports(owner, repo, filePaths);
   }
 
   // 4. Complexity calculation (no AI needed)
@@ -105,24 +123,20 @@ const performAnalysis = async (owner, repo, repoName) => {
   }
 
   // 5. AI Analysis — try combined prompt first (1 call instead of 7)
-  const pkgString = packageJson
-    ? JSON.stringify(packageJson, null, 2).slice(0, 1500)
-    : 'No package.json found.';
-
-  let summary, folderExplanation, techStack, dependenciesExplanation, architecture, runInstructions, keyFiles;
+  let summary, folderExplanation, techStack, dependenciesExplanation, architecture, runInstructions, aiKeyFiles;
 
   const structured = await generateStructuredAnalysis({
     metadata,
     treeString,
-    pkgString,
+    pkgString: depString,
     repoName,
   });
 
   if (structured) {
-    // Combined prompt succeeded
-    ({ summary, folderExplanation, techStack, dependenciesExplanation, architecture, runInstructions, keyFiles } = structured);
+    ({ summary, folderExplanation, techStack, dependenciesExplanation, architecture, runInstructions } = structured);
+    aiKeyFiles = structured.keyFiles || [];
   } else {
-    // Fallback: individual prompts with throttling (sleep baked into groqService)
+    // Fallback: individual prompts
     console.log('Using fallback individual prompts...');
     summary = await generateCompletion(
       `Based on this metadata: ${JSON.stringify(metadata)}\nAnd this title and description, summarize the project. Format exactly with these 3 headers and use concise bullet points: '### Project Purpose', '### Key Features', '### Use Cases'.`
@@ -131,31 +145,39 @@ const performAnalysis = async (owner, repo, repoName) => {
       `Here is the file structure of a repository:\n${treeString}\nExplain the folder structure and its purpose. Use concise bullet points.`
     );
     techStack = await generateCompletion(
-      `Here is the package.json of a project:\n${pkgString}\nDetect the frameworks and libraries used and list the main ones. Return as a Markdown list.`
+      `Here are the dependency files of a project:\n${depString}\nDetect the frameworks and libraries used and list the main ones. Return as a Markdown list.`
     );
     dependenciesExplanation = await generateCompletion(
-      `Here is the package.json of a project:\n${pkgString}\nExplain the dependencies and their roles in detail. Format exactly as a bulleted list under the header '### Dependencies'.`
+      `Here are the dependency files of a project:\n${depString}\nExplain the dependencies and their roles in detail. Format exactly as a bulleted list under the header '### Dependencies'.`
     );
     architecture = await generateCompletion(
-      `Based on this file structure:\n${treeString}\nAnd this package.json:\n${pkgString}\nGive a high-level system architecture overview. Format exactly as a bulleted list under the header '### Architecture Overview'.`
+      `Based on this file structure:\n${treeString}\nAnd these dependencies:\n${depString}\nGive a high-level system architecture overview. Format exactly as a bulleted list under the header '### Architecture Overview'.`
     );
     runInstructions = await generateCompletion(
-      `Based on this package.json:\n${pkgString}\nAnd the repository name ${repoName}, generate instructions for running the project locally. Format exactly as a step-by-step list under the header '### How To Run The Project' (e.g. Clone repository, Install dependencies, Run development server) including bash code blocks where appropriate.`
+      `Based on these dependency files:\n${depString}\nAnd the repository name ${repoName}, generate instructions for running the project locally. Format exactly as a step-by-step list under the header '### How To Run The Project' (e.g. Clone repository, Install dependencies, Run development server) including bash code blocks where appropriate.`
     );
 
     const keyFilesResponse = await generateCompletion(
       `Identify the most important files in this repository based on this structure. Output only a comma-separated list of file paths. Do not include any explanations.\n\nStructure:\n${treeString}`
     );
-    keyFiles = keyFilesResponse
+    aiKeyFiles = keyFilesResponse
       .split(',')
       .map((f) => f.trim())
       .filter(Boolean);
   }
 
-  // 6. Store documents for chat (background, non-blocking)
+  // 6. Score-based important file ranking (deduped, top 15)
+  const keyFiles = getTopImportantFiles(filePaths, aiKeyFiles, 15);
+
+  // If we detected frameworks from imports but no dep files, append to tech stack
+  if (detectedFrameworks.length > 0) {
+    const frameworkNote = `\n\n### Detected from Code Imports\n${detectedFrameworks.map((f) => `- ${f}`).join('\n')}`;
+    techStack = (techStack || '') + frameworkNote;
+  }
+
+  // 7. Store documents for chat (background, non-blocking)
   const readmeContent = (await fetchFileContent(owner, repo, 'README.md')) || '';
 
-  // Fire-and-forget document storage
   (async () => {
     try {
       const chunks = [];
@@ -181,14 +203,15 @@ const performAnalysis = async (owner, repo, repoName) => {
     }
   })();
 
-  // Store lightweight context for chat
-  repoCache.set(repoName, {
+  // Store chat context keyed by the CACHE KEY (URL-scoped)
+  chatContextCache.set(cacheKey, {
     name: metadata.name,
     description: metadata.description,
     readme: readmeContent.slice(0, 1500),
-    dependencies: pkgString,
+    dependencies: depString,
     folderStructure: treeString,
     importantFiles: keyFiles.join(', '),
+    repoId: repoName,
   });
 
   // Build response
@@ -213,6 +236,8 @@ const performAnalysis = async (owner, repo, repoName) => {
     architecture,
     runInstructions,
     keyFiles,
+    detectedEcosystems: depResult.ecosystems.map((e) => e.ecosystem),
+    detectedFrameworks,
     complexity: {
       score: complexityScore,
       estimatedTime: timeToUnderstand,
@@ -239,45 +264,43 @@ export const analyzeRepository = async (req, res) => {
   if (!parsed) return res.status(400).json({ error: 'Invalid GitHub URL.' });
 
   const { owner, repo } = parsed;
-  const repoName = `${owner}_${repo}`;
+  const cacheKey = normalizeCacheKey(url);
 
   try {
-    // ── CHECK CACHE ──
-    if (analysisCache.has(repoName)) {
-      console.log(`✅ Cache hit for ${repoName}`);
-      const cached = analysisCache.get(repoName);
+    // ── CHECK CACHE (keyed by normalized URL) ──
+    if (analysisCache.has(cacheKey)) {
+      console.log(`✅ Cache hit for ${cacheKey}`);
+      const cached = analysisCache.get(cacheKey);
       return res.json({ ...cached, cached: true });
     }
 
     // ── CHECK IN-PROGRESS (prevent duplicate simultaneous analyses) ──
-    if (inProgress.has(repoName)) {
-      console.log(`⏳ Analysis already in progress for ${repoName}, awaiting result...`);
-      const result = await inProgress.get(repoName);
+    if (inProgress.has(cacheKey)) {
+      console.log(`⏳ Analysis already in progress for ${cacheKey}, awaiting result...`);
+      const result = await inProgress.get(cacheKey);
       return res.json({ ...result, cached: true });
     }
 
     // ── START ANALYSIS ──
-    console.log(`🔍 Starting fresh analysis for ${repoName}...`);
+    console.log(`🔍 Starting fresh analysis for ${cacheKey}...`);
 
-    const analysisPromise = performAnalysis(owner, repo, repoName);
-    inProgress.set(repoName, analysisPromise);
+    const analysisPromise = performAnalysis(owner, repo, url);
+    inProgress.set(cacheKey, analysisPromise);
 
     try {
       const result = await analysisPromise;
 
-      // Store in cache
-      analysisCache.set(repoName, result);
-      console.log(`💾 Cached analysis for ${repoName}`);
+      // Store in cache keyed by URL
+      analysisCache.set(cacheKey, result);
+      console.log(`💾 Cached analysis for ${cacheKey}`);
 
       return res.json(result);
     } finally {
-      // Always clean up in-progress tracker
-      inProgress.delete(repoName);
+      inProgress.delete(cacheKey);
     }
   } catch (error) {
     console.error('Analyze Error:', error.message);
 
-    // Return a specific error type for rate limits
     if (isRateLimitError(error)) {
       return res.status(429).json({
         error: 'AI analysis is temporarily busy due to rate limiting. Please try again in a few seconds.',
@@ -300,7 +323,15 @@ export const chatWithRepository = async (req, res) => {
     const contextDoc = await queryDocuments(repoId, message, 3);
     const vectorContext = Array.isArray(contextDoc) ? contextDoc.join('\n\n') : '';
 
-    const cached = repoCache.get(repoId) || {};
+    // Try to find chat context — first by repoId, then by any cache key containing it
+    let cached = null;
+    for (const [, val] of chatContextCache) {
+      if (val.repoId === repoId) {
+        cached = val;
+        break;
+      }
+    }
+    cached = cached || {};
 
     const context = `
 Repository Name: ${cached.name || repoId}
@@ -373,17 +404,18 @@ export const explainFile = async (req, res) => {
 };
 
 /**
- * Utility endpoint: clear the analysis cache for a specific repo or all repos.
+ * Clear the analysis cache for a specific repo URL or all repos.
  */
 export const clearCache = (req, res) => {
-  const { repoId } = req.body;
-  if (repoId) {
-    analysisCache.delete(repoId);
-    repoCache.delete(repoId);
-    res.json({ message: `Cache cleared for ${repoId}` });
+  const { repoUrl } = req.body;
+  if (repoUrl) {
+    const key = normalizeCacheKey(repoUrl);
+    analysisCache.delete(key);
+    chatContextCache.delete(key);
+    res.json({ message: `Cache cleared for ${key}` });
   } else {
     analysisCache.clear();
-    repoCache.clear();
+    chatContextCache.clear();
     res.json({ message: 'All caches cleared' });
   }
 };

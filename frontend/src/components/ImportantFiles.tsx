@@ -90,7 +90,7 @@ const CATEGORIES: CategoryDef[] = [
   },
 ];
 
-const DEFAULT_VISIBLE = 12;
+const DEFAULT_VISIBLE = 15;
 
 interface ImportantFilesProps {
   keyFiles: string[];
@@ -102,10 +102,12 @@ export default function ImportantFiles({ keyFiles, repoUrl, defaultBranch }: Imp
   const [showAll, setShowAll] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  /* ── Sort: priority first, then alphabetical ── */
+  /* ── Deduplicate + Sort: priority first, then alphabetical ── */
   const sortedFiles = useMemo(() => {
     if (!keyFiles || keyFiles.length === 0) return [];
-    return [...keyFiles].sort((a, b) => {
+    // Deduplicate using a Set
+    const unique = [...new Set(keyFiles.map(f => f.trim()).filter(Boolean))];
+    return unique.sort((a, b) => {
       const aName = (a.split('/').pop() || '').toLowerCase();
       const bName = (b.split('/').pop() || '').toLowerCase();
       const aPriority = PRIORITY_FILES.has(aName) ? 0 : 1;
