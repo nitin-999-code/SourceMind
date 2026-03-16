@@ -65,7 +65,7 @@ export default function SharedAnalysis() {
   if (!data) return null;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: T.bg, color: T.text }}>
+    <div className="min-h-screen flex flex-col" style={{ background: T.bg, color: T.text, opacity: 1 }}>
       <div className="flex-1 pb-20">
         <RepoContent data={data} />
       </div>
