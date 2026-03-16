@@ -8,6 +8,7 @@ export interface ChatMessage {
 
 export interface RepoTab {
   id: string;
+  tabType: 'repo' | 'analyzer';
   repoUrl: string;
   repoName: string;
   owner: string;
@@ -28,6 +29,9 @@ export function useTabStore() {
 
   const activeTab = tabs.find(t => t.id === activeTabId) || null;
 
+  /**
+   * Add a repo tab and immediately start loading.
+   */
   const addTab = useCallback((repoUrl: string): string => {
     const id = `tab-${nextIdRef.current++}`;
     const parts = repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/$/, '').split('/');
@@ -36,6 +40,7 @@ export function useTabStore() {
 
     const newTab: RepoTab = {
       id,
+      tabType: 'repo',
       repoUrl,
       repoName,
       owner,
@@ -53,13 +58,71 @@ export function useTabStore() {
     return id;
   }, []);
 
+  /**
+   * Add a blank analyzer tab (no URL yet).
+   * Returns the tab ID.
+   */
+  const addAnalyzerTab = useCallback((): string => {
+    // Check if there's already an active analyzer tab — reuse it
+    const existing = tabs.find(t => t.tabType === 'analyzer');
+    if (existing) {
+      setActiveTabId(existing.id);
+      return existing.id;
+    }
+
+    const id = `tab-${nextIdRef.current++}`;
+    const newTab: RepoTab = {
+      id,
+      tabType: 'analyzer',
+      repoUrl: '',
+      repoName: 'New Analysis',
+      owner: '',
+      data: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+      chatMessages: [],
+      chatOpen: false,
+      chatExpanded: false,
+    };
+
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(id);
+    return id;
+  }, [tabs]);
+
+  /**
+   * Convert an analyzer tab into a repo tab (when user submits a URL).
+   */
+  const convertAnalyzerToRepo = useCallback((tabId: string, repoUrl: string) => {
+    const parts = repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/$/, '').split('/');
+    const owner = parts[0] || 'unknown';
+    const repoName = parts[1] || 'repo';
+
+    setTabs(prev => prev.map(t =>
+      t.id === tabId
+        ? {
+            ...t,
+            tabType: 'repo' as const,
+            repoUrl,
+            repoName,
+            owner,
+            isLoading: true,
+            isError: false,
+            error: null,
+            data: null,
+          }
+        : t
+    ));
+  }, []);
+
   const closeTab = useCallback((tabId: string) => {
     setTabs(prev => {
       const newTabs = prev.filter(t => t.id !== tabId);
-      // If closing the active tab, switch to the nearest tab
       if (tabId === activeTabId && newTabs.length > 0) {
+        // Switch to previous tab (the one before the closed tab, or the last one)
         const closedIndex = prev.findIndex(t => t.id === tabId);
-        const newIndex = Math.min(closedIndex, newTabs.length - 1);
+        const newIndex = Math.min(Math.max(closedIndex - 1, 0), newTabs.length - 1);
         setActiveTabId(newTabs[newIndex].id);
       } else if (newTabs.length === 0) {
         setActiveTabId(null);
@@ -121,6 +184,8 @@ export function useTabStore() {
     activeTab,
     activeTabId,
     addTab,
+    addAnalyzerTab,
+    convertAnalyzerToRepo,
     closeTab,
     switchTab,
     updateTabData,

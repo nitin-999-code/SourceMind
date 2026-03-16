@@ -1,8 +1,9 @@
-import { X, Plus, Github } from 'lucide-react';
+import { X, Plus, Github, Sparkles } from 'lucide-react';
 import { theme as T } from '../lib/theme';
 
 interface Tab {
   id: string;
+  tabType: 'repo' | 'analyzer';
   repoName: string;
   owner: string;
   isLoading: boolean;
@@ -29,10 +30,12 @@ export default function TabBar({ tabs, activeTabId, onSwitchTab, onCloseTab, onN
         height: 44,
       }}
     >
-      {/* Tab scroll area */}
+      {/* Tabs + inline new-tab button */}
       <div className="flex-1 flex items-end overflow-x-auto scrollbar-none px-2 gap-0.5" style={{ height: '100%' }}>
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
+          const isAnalyzer = tab.tabType === 'analyzer';
+
           return (
             <button
               key={tab.id}
@@ -46,7 +49,7 @@ export default function TabBar({ tabs, activeTabId, onSwitchTab, onCloseTab, onN
                 border: isActive ? `1px solid ${T.border}` : '1px solid transparent',
                 borderBottom: isActive ? '1px solid transparent' : 'none',
                 color: isActive ? T.text : T.muted,
-                minWidth: 140,
+                minWidth: isAnalyzer ? 150 : 140,
                 maxWidth: 220,
               }}
               onMouseEnter={(e) => {
@@ -73,14 +76,20 @@ export default function TabBar({ tabs, activeTabId, onSwitchTab, onCloseTab, onN
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ background: '#EF4444' }} />
               )}
 
-              {/* Repo icon */}
-              {!tab.isError && !tab.isLoading && (
-                <Github className="w-3.5 h-3.5 shrink-0" style={{ color: isActive ? T.accent : T.muted }} />
+              {/* Tab icon */}
+              {isAnalyzer ? (
+                <Sparkles className="w-3.5 h-3.5 shrink-0" style={{ color: isActive ? '#FBBF24' : T.muted }} />
+              ) : (
+                !tab.isError && !tab.isLoading && (
+                  <Github className="w-3.5 h-3.5 shrink-0" style={{ color: isActive ? T.accent : T.muted }} />
+                )
               )}
 
               {/* Tab label */}
               <span className="truncate text-xs font-medium">
-                {tab.isLoading ? (
+                {isAnalyzer ? (
+                  <span style={{ color: isActive ? '#FBBF24' : T.muted }}>New Analysis</span>
+                ) : tab.isLoading ? (
                   <span style={{ color: T.muted }}>Analyzing...</span>
                 ) : (
                   <>
@@ -103,7 +112,7 @@ export default function TabBar({ tabs, activeTabId, onSwitchTab, onCloseTab, onN
                 <X className="w-3 h-3" />
               </div>
 
-              {/* Active tab bottom cover (hides the border-bottom) */}
+              {/* Active tab bottom cover */}
               {isActive && (
                 <div
                   className="absolute -bottom-px left-0 right-0 h-px"
@@ -113,31 +122,32 @@ export default function TabBar({ tabs, activeTabId, onSwitchTab, onCloseTab, onN
             </button>
           );
         })}
-      </div>
 
-      {/* New tab button */}
-      <button
-        onClick={onNewTab}
-        className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 mr-2 rounded-lg text-xs font-medium transition-all duration-200 self-center"
-        style={{
-          color: T.muted,
-          border: `1px solid ${T.border}`,
-          background: 'transparent',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(37,99,235,0.1)';
-          e.currentTarget.style.borderColor = 'rgba(37,99,235,0.3)';
-          e.currentTarget.style.color = '#60A5FA';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.borderColor = T.border;
-          e.currentTarget.style.color = T.muted;
-        }}
-      >
-        <Plus className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">Analyze Repo</span>
-      </button>
+        {/* ── Inline "+" button — appears right after the last tab ── */}
+        <button
+          onClick={onNewTab}
+          className="shrink-0 flex items-center justify-center self-center transition-all duration-200 outline-none"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            color: T.muted,
+            background: 'transparent',
+            marginLeft: 2,
+          }}
+          title="Open new analysis tab"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(37,99,235,0.12)';
+            e.currentTarget.style.color = '#60A5FA';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = T.muted;
+          }}
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 }

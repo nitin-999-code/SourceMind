@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Github, FileCode, Server, ListTree, Package, LayoutTemplate, 
   Star, GitFork, GitCommitHorizontal, Calendar, Disc, AlertCircle,
-  Activity, Network, ChevronDown, ChevronUp, Play, FolderOpen, Layers
+  Activity, Network, ChevronDown, ChevronUp, Play, FolderOpen, Layers,
+  ArrowRight, Sparkles, Search
 } from 'lucide-react';
 import { CopyButton } from '../components/CopyButton';
 import { FolderTree } from '../components/FolderTree';
@@ -14,7 +15,6 @@ import { MarkdownViewer } from '../components/MarkdownViewer';
 import Chat from '../components/Chat';
 import TabBar from '../components/TabBar';
 import ImportantFiles from '../components/ImportantFiles';
-import NewTabModal from '../components/NewTabModal';
 import { useTabStore } from '../store/useTabStore';
 import { theme as T } from '../lib/theme';
 
@@ -516,6 +516,121 @@ function ErrorView({ error, onRetry, isRateLimit = false }: { error: string; onR
 }
 
 /* ═══════════════ EMPTY STATE ═══════════════ */
+/* ═══════════════ QUICK PICK REPOS ═══════════════ */
+const QUICK_REPOS = [
+  { label: 'facebook/react', url: 'https://github.com/facebook/react' },
+  { label: 'vercel/next.js', url: 'https://github.com/vercel/next.js' },
+  { label: 'denoland/deno', url: 'https://github.com/denoland/deno' },
+  { label: 'microsoft/vscode', url: 'https://github.com/microsoft/vscode' },
+  { label: 'expressjs/express', url: 'https://github.com/expressjs/express' },
+  { label: 'vitejs/vite', url: 'https://github.com/vitejs/vite' },
+];
+
+/* ═══════════════ ANALYZER VIEW (inline tab content) ═══════════════ */
+function AnalyzerView({ onSubmit }: { onSubmit: (url: string) => void }) {
+  const [url, setUrl] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 150);
+  }, []);
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed);
+  };
+
+  return (
+    <div
+      className="flex-1 flex flex-col items-center justify-center p-8"
+      style={{ background: T.bg, minHeight: 'calc(100vh - 44px)' }}
+    >
+      {/* Hero */}
+      <div
+        className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
+        style={{ background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.15)' }}
+      >
+        <Search className="w-10 h-10" style={{ color: T.accent }} />
+      </div>
+      <h2 className="text-2xl font-bold mb-1" style={{ color: T.text }}>Analyze a Repository</h2>
+      <p className="text-sm mb-8 max-w-md text-center" style={{ color: T.muted }}>
+        Paste a GitHub URL to get an AI-powered analysis of the codebase — architecture, dependencies, entry points, and more.
+      </p>
+
+      {/* Input form */}
+      <form onSubmit={handleSubmit} className="w-full max-w-lg mb-8">
+        <div
+          className="flex items-center p-1 rounded-xl transition-all duration-200"
+          style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: `0 4px 16px ${T.shadow}` }}
+        >
+          <div className="flex items-center flex-1 gap-3 pl-3">
+            <Github className="w-4 h-4 shrink-0" style={{ color: T.muted }} />
+            <input
+              ref={inputRef}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://github.com/owner/repo"
+              className="w-full h-12 bg-transparent text-sm outline-none"
+              style={{ color: T.text, caretColor: T.accent }}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!url.trim()}
+            className="h-11 px-6 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-200 disabled:opacity-40 shrink-0 hover:scale-[1.02]"
+            style={{ background: T.accent, color: '#fff' }}
+            onMouseEnter={(e) => {
+              if (!e.currentTarget.disabled) e.currentTarget.style.background = T.accentH;
+            }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
+          >
+            Analyze
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </form>
+
+      {/* Quick picks */}
+      <div className="w-full max-w-lg">
+        <p className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: T.muted }}>
+          <Sparkles className="w-3 h-3" />
+          Quick picks
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {QUICK_REPOS.map(repo => (
+            <button
+              key={repo.url}
+              onClick={() => onSubmit(repo.url)}
+              className="flex items-center gap-2 p-3 rounded-xl text-left transition-all duration-200 group"
+              style={{ background: T.card, border: `1px solid ${T.border}` }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(37,99,235,0.3)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = T.border;
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <Github className="w-3.5 h-3.5 shrink-0" style={{ color: T.muted }} />
+              <span className="text-xs font-mono truncate" style={{ color: T.text }}>
+                {repo.label}
+              </span>
+              <ArrowRight
+                className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                style={{ color: T.accent }}
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════ EMPTY STATE ═══════════════ */
 function EmptyState({ onNewTab }: { onNewTab: () => void }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center" style={{ background: T.bg }}>
@@ -551,7 +666,6 @@ export default function Dashboard() {
   const initialUrl = urlParams.get('url');
 
   const [mounted, setMounted] = useState(false);
-  const [newTabModalOpen, setNewTabModalOpen] = useState(false);
   const initializedRef = useRef(false);
 
   const {
@@ -559,6 +673,8 @@ export default function Dashboard() {
     activeTab,
     activeTabId,
     addTab,
+    addAnalyzerTab,
+    convertAnalyzerToRepo,
     closeTab,
     switchTab,
     updateTabData,
@@ -598,23 +714,26 @@ export default function Dashboard() {
     requestAnimationFrame(() => setMounted(true));
   }, []);
 
-  /* ── Handle new tab ── */
-  const handleNewTab = useCallback((url: string) => {
-    setNewTabModalOpen(false);
-    const tabId = addTab(url);
+  /* ── Handle "+" button click — open new analyzer tab ── */
+  const handleNewAnalyzerTab = useCallback(() => {
+    addAnalyzerTab();
+  }, [addAnalyzerTab]);
+
+  /* ── Handle URL submit from analyzer tab ── */
+  const handleAnalyzerSubmit = useCallback((tabId: string, url: string) => {
+    convertAnalyzerToRepo(tabId, url);
     analyzeRepo(tabId, url);
-  }, [addTab, analyzeRepo]);
+  }, [convertAnalyzerToRepo, analyzeRepo]);
 
   /* ── Handle close tab → go home if none left ── */
   const handleCloseTab = useCallback((tabId: string) => {
     closeTab(tabId);
-    // If this was the last tab, navigate home
     if (tabs.length <= 1) {
       navigate('/');
     }
   }, [closeTab, tabs.length, navigate]);
 
-  /* ── Navigate home if no URL ── */
+  /* ── Navigate home if no URL and no tabs ── */
   if (!initialUrl && tabs.length === 0) {
     navigate('/');
     return null;
@@ -635,6 +754,7 @@ export default function Dashboard() {
       <TabBar
         tabs={tabs.map(t => ({
           id: t.id,
+          tabType: t.tabType,
           repoName: t.repoName,
           owner: t.owner,
           isLoading: t.isLoading,
@@ -643,7 +763,7 @@ export default function Dashboard() {
         activeTabId={activeTabId}
         onSwitchTab={switchTab}
         onCloseTab={handleCloseTab}
-        onNewTab={() => setNewTabModalOpen(true)}
+        onNewTab={handleNewAnalyzerTab}
       />
 
       {/* Spacer for fixed tab bar */}
@@ -651,7 +771,12 @@ export default function Dashboard() {
 
       {/* ═══════════ TAB CONTENT ═══════════ */}
       {activeTab ? (
-        activeTab.isLoading ? (
+        // Analyzer tab — show inline analyzer form
+        activeTab.tabType === 'analyzer' ? (
+          <AnalyzerView
+            onSubmit={(url) => handleAnalyzerSubmit(activeTab.id, url)}
+          />
+        ) : activeTab.isLoading ? (
           <LoadingState />
         ) : activeTab.isError ? (
           <ErrorView
@@ -662,7 +787,7 @@ export default function Dashboard() {
                 updateTabError(activeTab.id, '');
                 analyzeRepo(activeTab.id, activeTab.repoUrl);
               } else {
-                setNewTabModalOpen(true);
+                handleNewAnalyzerTab();
               }
             }}
           />
@@ -684,15 +809,8 @@ export default function Dashboard() {
           </div>
         ) : null
       ) : (
-        <EmptyState onNewTab={() => setNewTabModalOpen(true)} />
+        <EmptyState onNewTab={handleNewAnalyzerTab} />
       )}
-
-      {/* ═══════════ NEW TAB MODAL ═══════════ */}
-      <NewTabModal
-        isOpen={newTabModalOpen}
-        onClose={() => setNewTabModalOpen(false)}
-        onSubmit={handleNewTab}
-      />
     </div>
   );
 }
