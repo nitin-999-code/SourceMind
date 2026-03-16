@@ -1,7 +1,60 @@
 import { useState, useMemo } from 'react';
-import { FileCode, ExternalLink, ChevronDown, ChevronUp, FolderCog, FileText, Wrench, Package } from 'lucide-react';
+import {
+  FileCode, ExternalLink, ChevronDown, ChevronUp, FolderCog,
+  FileText, Wrench, Package, Lock, Settings, FileJson, Hash
+} from 'lucide-react';
 import { CopyButton } from './CopyButton';
 import { theme as T } from '../lib/theme';
+
+/* ═══════════════ FILE TYPE ICON MAP ═══════════════ */
+const getFileIcon = (fileName: string): { icon: any; color: string } => {
+  const lower = fileName.toLowerCase();
+  const ext = lower.includes('.') ? lower.slice(lower.lastIndexOf('.')) : '';
+
+  // Markdown / docs
+  if (ext === '.md' || ext === '.txt' || lower === 'license' || lower === 'changelog') {
+    return { icon: FileText, color: '#34D399' };
+  }
+  // JSON
+  if (ext === '.json') {
+    return { icon: FileJson, color: '#FBBF24' };
+  }
+  // YAML / CI
+  if (ext === '.yml' || ext === '.yaml') {
+    return { icon: Settings, color: '#818CF8' };
+  }
+  // TOML / config
+  if (ext === '.toml' || ext === '.cfg' || ext === '.ini') {
+    return { icon: FolderCog, color: '#FB923C' };
+  }
+  // Lock files
+  if (ext === '.lock' || lower.includes('lock.json') || lower.includes('lock.yaml')) {
+    return { icon: Lock, color: '#6B7280' };
+  }
+  // Config files
+  if (lower.includes('config') || lower.includes('tsconfig') || lower.startsWith('.env') ||
+      lower.startsWith('.eslint') || lower.startsWith('.prettier') || lower === '.gitignore' ||
+      lower === 'dockerfile' || lower.includes('docker-compose') || lower === 'makefile') {
+    return { icon: FolderCog, color: '#FBBF24' };
+  }
+  // Package managers
+  if (lower === 'package.json' || lower === 'cargo.toml' || lower === 'go.mod' ||
+      lower === 'requirements.txt' || lower === 'pyproject.toml' || lower === 'gemfile' ||
+      lower === 'pom.xml' || lower === 'build.gradle' || lower.endsWith('.csproj')) {
+    return { icon: Package, color: '#A78BFA' };
+  }
+  // Code files
+  if (['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs', '.java', '.rb', '.cs',
+       '.cpp', '.c', '.h', '.swift', '.kt'].includes(ext)) {
+    return { icon: FileCode, color: '#60A5FA' };
+  }
+  // CSS / styling
+  if (['.css', '.scss', '.sass', '.less', '.styl'].includes(ext)) {
+    return { icon: Hash, color: '#F472B6' };
+  }
+
+  return { icon: FileCode, color: T.muted };
+};
 
 /* ═══════════════ FILE CATEGORIZATION ═══════════════ */
 const PRIORITY_FILES = new Set([
@@ -83,14 +136,13 @@ const CATEGORIES: CategoryDef[] = [
       return (
         name === 'package.json' || name === 'package-lock.json' || name === 'yarn.lock' ||
         name === 'pnpm-lock.yaml' || name === 'requirements.txt' || name === 'gemfile' ||
-        name === 'gemfile.lock' || lower.includes('build/') || lower.includes('dist/') ||
-        lower.includes('.github/') || lower.includes('ci/') || lower.includes('scripts/')
+        name === 'gemfile.lock' || lower.includes('.github/') || lower.includes('ci/') || lower.includes('scripts/')
       );
     }
   },
 ];
 
-const DEFAULT_VISIBLE = 15;
+const DEFAULT_VISIBLE = 10;
 
 interface ImportantFilesProps {
   keyFiles: string[];
@@ -105,7 +157,6 @@ export default function ImportantFiles({ keyFiles, repoUrl, defaultBranch }: Imp
   /* ── Deduplicate + Sort: priority first, then alphabetical ── */
   const sortedFiles = useMemo(() => {
     if (!keyFiles || keyFiles.length === 0) return [];
-    // Deduplicate using a Set
     const unique = [...new Set(keyFiles.map(f => f.trim()).filter(Boolean))];
     return unique.sort((a, b) => {
       const aName = (a.split('/').pop() || '').toLowerCase();
@@ -136,7 +187,6 @@ export default function ImportantFiles({ keyFiles, repoUrl, defaultBranch }: Imp
       if (!found) uncategorized.push(file);
     });
 
-    // Add uncategorized to "Core Files" for visibility
     if (uncategorized.length > 0) {
       result['Core Files'] = [...result['Core Files'], ...uncategorized];
     }
@@ -216,11 +266,12 @@ export default function ImportantFiles({ keyFiles, repoUrl, defaultBranch }: Imp
         })}
       </div>
 
-      {/* File chips */}
+      {/* File chips with type-specific icons */}
       <div className="flex flex-wrap gap-2">
         {displayFiles.map((file: string) => {
           const fileName = file.split('/').pop() || file;
           const isPriority = PRIORITY_FILES.has(fileName.toLowerCase());
+          const { icon: FileIcon, color: iconColor } = getFileIcon(fileName);
           return (
             <div
               key={file}
@@ -245,11 +296,11 @@ export default function ImportantFiles({ keyFiles, repoUrl, defaultBranch }: Imp
                 className="px-3 py-2 text-sm font-mono flex items-center gap-2 flex-1"
                 style={{ color: T.text }}
               >
-                <FileCode
+                <FileIcon
                   className="w-4 h-4 shrink-0"
-                  style={{ color: isPriority ? T.accent : T.muted }}
+                  style={{ color: iconColor }}
                 />
-                <span className="truncate max-w-[200px]" title={file}>
+                <span className="truncate max-w-[220px]" title={file}>
                   {file.includes('/') ? (
                     <>
                       <span style={{ opacity: 0.4 }}>{file.substring(0, file.lastIndexOf('/') + 1)}</span>
@@ -301,15 +352,9 @@ export default function ImportantFiles({ keyFiles, repoUrl, defaultBranch }: Imp
             }}
           >
             {showAll ? (
-              <>
-                <ChevronUp className="w-4 h-4" />
-                Show Less
-              </>
+              <><ChevronUp className="w-4 h-4" /> Show Less</>
             ) : (
-              <>
-                <ChevronDown className="w-4 h-4" />
-                Show {hiddenCount} More Files
-              </>
+              <><ChevronDown className="w-4 h-4" /> Show {hiddenCount} More Files</>
             )}
           </button>
         </div>

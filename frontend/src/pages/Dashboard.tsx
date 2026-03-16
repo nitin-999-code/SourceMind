@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Github, FileCode, Server, ListTree, Package, LayoutTemplate, 
   Star, GitFork, GitCommitHorizontal, Calendar, Disc, AlertCircle,
-  Activity, Network, ChevronDown, ChevronUp
+  Activity, Network, ChevronDown, ChevronUp, Play, FolderOpen, Layers
 } from 'lucide-react';
 import { CopyButton } from '../components/CopyButton';
 import { FolderTree } from '../components/FolderTree';
@@ -222,6 +222,90 @@ function RepoContent({ data }: { data: any }) {
           </SectionCard>
         </div>
 
+        {/* ═══════════ ENTRY POINTS & CORE MODULES ═══════════ */}
+        {(data.primaryEntry || (data.coreModules && data.coreModules.length > 0)) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <SectionCard
+              icon={Play}
+              title="Entry Point & Architecture"
+              iconColor="#34D399"
+              accentBar="linear-gradient(to right, #34D399, #10B981)"
+            >
+              <div className="space-y-4">
+                {data.primaryEntry && (
+                  <div
+                    className="p-4 rounded-xl flex items-center gap-3"
+                    style={{ background: T.bgSec, border: `1px solid ${T.border}` }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: 'rgba(52,211,153,0.1)' }}
+                    >
+                      <Play className="w-5 h-5" style={{ color: '#34D399' }} />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: T.muted }}>Primary Entry Point</p>
+                      <a
+                        href={`${data.metadata.url}/blob/${data.metadata.defaultBranch}/${data.primaryEntry}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm font-mono hover:underline"
+                        style={{ color: '#34D399' }}
+                      >
+                        {data.primaryEntry}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {data.entryPoints && data.entryPoints.length > 1 && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wider font-semibold mb-2" style={{ color: T.muted }}>Other Entry Points</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {data.entryPoints.slice(1).map((ep: string) => (
+                        <a
+                          key={ep}
+                          href={`${data.metadata.url}/blob/${data.metadata.defaultBranch}/${ep}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1 rounded-md text-xs font-mono transition-colors duration-150"
+                          style={{ background: T.bgSec, border: `1px solid ${T.border}`, color: T.text }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(52,211,153,0.4)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; }}
+                        >
+                          {ep}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+
+            <SectionCard icon={Layers} title="Core Modules" iconColor="#818CF8">
+              {data.coreModules && data.coreModules.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {data.coreModules.map((mod: any) => (
+                    <div
+                      key={mod.directory}
+                      className="p-3 rounded-xl flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5"
+                      style={{ background: T.bgSec, border: `1px solid ${T.border}` }}
+                    >
+                      <FolderOpen className="w-4 h-4 shrink-0" style={{ color: '#A78BFA' }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-mono truncate" style={{ color: T.text }}>{mod.directory}</p>
+                        <p className="text-xs" style={{ color: T.muted }}>{mod.label} · {mod.fileCount} files</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm" style={{ color: T.muted }}>No distinct core modules detected.</p>
+              )}
+            </SectionCard>
+          </div>
+        )}
+
         {/* ═══════════ ROW 2: Languages & Complexity ═══════════ */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SectionCard icon={FileCode} title="Language Distribution" iconColor="#F472B6">
@@ -303,9 +387,51 @@ function RepoContent({ data }: { data: any }) {
           />
         </SectionCard>
 
-        {/* ═══════════ ROW 4: Dependencies & Run Instructions ═══════════ */}
+        {/* ═══════════ GROUPED DEPENDENCIES ═══════════ */}
+        {data.depGroups && (
+          <SectionCard
+            icon={Package}
+            title="Dependencies Overview"
+            iconColor="#FB923C"
+            accentBar="linear-gradient(to right, #FB923C, #F59E0B)"
+          >
+            <div className="space-y-5">
+              {([
+                { key: 'frameworks', label: 'Frameworks', color: '#60A5FA', emoji: '🏗️' },
+                { key: 'coreLibraries', label: 'Core Libraries', color: '#34D399', emoji: '📚' },
+                { key: 'buildTools', label: 'Build Tools', color: '#FBBF24', emoji: '⚙️' },
+                { key: 'devTools', label: 'Dev Tools', color: '#A78BFA', emoji: '🔧' },
+                { key: 'other', label: 'Other', color: T.muted, emoji: '📦' },
+              ] as const).map(({ key, label, color, emoji }) => {
+                const deps = (data.depGroups as any)[key] as string[];
+                if (!deps || deps.length === 0) return null;
+                return (
+                  <div key={key}>
+                    <p className="text-xs uppercase tracking-wider font-semibold mb-2 flex items-center gap-1.5" style={{ color }}>
+                      <span>{emoji}</span> {label}
+                      <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px]" style={{ background: `${color}15`, color }}>{deps.length}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {deps.map((dep: string) => (
+                        <span
+                          key={dep}
+                          className="px-2.5 py-1 rounded-md text-xs font-mono"
+                          style={{ background: T.bgSec, border: `1px solid ${T.border}`, color: T.text }}
+                        >
+                          {dep}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ═══════════ ROW 4: AI Dependencies Detail & Run Instructions ═══════════ */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SectionCard icon={Package} title="Core Dependencies" iconColor="#FB923C" copyText={data.dependenciesExplanation || 'No context'}>
+          <SectionCard icon={Package} title="Dependency Analysis" iconColor="#FB923C" copyText={data.dependenciesExplanation || 'No context'}>
             <CollapsibleSection>
               <MarkdownViewer content={data.dependenciesExplanation || 'No dependency information generated.'} />
             </CollapsibleSection>

@@ -107,8 +107,12 @@ export const generateCompletion = async (
  * Combined structured analysis — sends ONE prompt to Groq instead of 7 separate calls.
  * Returns a parsed JSON object with all analysis fields.
  */
-export const generateStructuredAnalysis = async ({ metadata, treeString, pkgString, repoName }) => {
+export const generateStructuredAnalysis = async ({ metadata, treeString, pkgString, repoName, architectureContext = '' }) => {
   const systemPrompt = `You are a senior software engineer. You will analyze a GitHub repository and return a SINGLE JSON response containing all analysis sections. You MUST respond with valid JSON only — no markdown fences, no explanations outside the JSON.`;
+
+  const archSection = architectureContext
+    ? `\nDetected Architecture Context:\n${architectureContext}\n`
+    : '';
 
   const userPrompt = `Analyze this GitHub repository and return a JSON object with the following keys. Each value should be a markdown-formatted string unless specified otherwise.
 
@@ -120,14 +124,14 @@ ${treeString}
 
 Dependency Files:
 ${pkgString}
-
+${archSection}
 Return EXACTLY this JSON structure:
 {
   "summary": "Markdown with headers: ### Project Purpose, ### Key Features, ### Use Cases — use concise bullet points.",
   "folderExplanation": "Markdown explaining the folder structure and its purpose with concise bullet points.",
   "techStack": "Markdown list of frameworks and libraries detected from the dependency files.",
   "dependenciesExplanation": "Markdown formatted as a bulleted list under header ### Dependencies, explaining each dependency and its role.",
-  "architecture": "Markdown formatted as a bulleted list under ### Architecture Overview giving a high-level system architecture overview.",
+  "architecture": "Markdown formatted as a bulleted list under ### Architecture Overview giving a high-level system architecture overview. IMPORTANT: Reference the detected entry point, core modules, and key directories by name. Explain the flow: what initializes, what the core modules do, and how the build system works.",
   "runInstructions": "Markdown with ### How To Run The Project header, step-by-step instructions including bash code blocks.",
   "keyFiles": ["array", "of", "important", "file", "paths"]
 }

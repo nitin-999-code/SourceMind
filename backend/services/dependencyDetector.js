@@ -323,3 +323,106 @@ export const detectFrameworksFromImports = async (owner, repo, filePaths) => {
 
   return [...detected];
 };
+
+// ═══════════════ DEPENDENCY GROUPING ═══════════════
+
+const FRAMEWORK_NAMES = new Set([
+  'react', 'react-dom', 'next', 'vue', 'nuxt', '@angular/core', 'svelte',
+  'express', 'fastify', 'koa', 'hapi', 'nestjs', '@nestjs/core', '@nestjs/common',
+  'flask', 'django', 'fastapi', 'tornado', 'sanic',
+  'actix-web', 'rocket', 'axum', 'warp',
+  'gin', 'echo', 'fiber',
+  'spring-boot', 'spring-core', 'spring-web',
+  'rails', 'sinatra',
+]);
+
+const BUILD_TOOL_NAMES = new Set([
+  'webpack', 'rollup', 'vite', 'esbuild', 'parcel', 'turbo', 'turborepo',
+  'babel', '@babel/core', '@babel/preset-env', '@babel/preset-react',
+  'gulp', 'grunt', 'snowpack',
+  'postcss', 'autoprefixer', 'cssnano', 'sass', 'less',
+  'tailwindcss', '@tailwindcss/forms', '@tailwindcss/typography',
+  'swc', '@swc/core',
+  'tsc', 'tsup', 'unbuild',
+]);
+
+const DEV_TOOL_NAMES = new Set([
+  'eslint', 'prettier', 'typescript', '@types/node', '@types/react',
+  'jest', 'vitest', 'mocha', 'chai', 'sinon', 'nyc', 'c8',
+  'cypress', 'playwright', '@playwright/test',
+  'husky', 'lint-staged', 'commitlint',
+  'nodemon', 'ts-node', 'tsx', 'concurrently',
+  'dotenv', 'cross-env',
+  'storybook', '@storybook/react',
+  'testing-library', '@testing-library/react', '@testing-library/jest-dom',
+]);
+
+const CORE_LIB_NAMES = new Set([
+  'axios', 'node-fetch', 'got', 'superagent',
+  'lodash', 'underscore', 'ramda',
+  'moment', 'dayjs', 'date-fns', 'luxon',
+  'chalk', 'commander', 'yargs', 'inquirer',
+  'uuid', 'nanoid',
+  'winston', 'pino', 'morgan', 'bunyan',
+  'mongoose', 'sequelize', 'prisma', '@prisma/client', 'typeorm', 'knex',
+  'redis', 'ioredis',
+  'socket.io', 'ws',
+  'jsonwebtoken', 'bcrypt', 'bcryptjs', 'passport',
+  'three', 'pixi.js', 'd3', 'chart.js', 'recharts',
+  'zustand', 'redux', '@reduxjs/toolkit', 'mobx', 'recoil', 'jotai',
+  'react-query', '@tanstack/react-query', 'swr',
+  'react-router', 'react-router-dom',
+  'framer-motion', 'gsap', 'animejs',
+  'zod', 'yup', 'joi', 'ajv',
+  'cors', 'helmet', 'compression', 'body-parser', 'cookie-parser',
+  'multer', 'sharp', 'jimp',
+  'numpy', 'pandas', 'scipy', 'matplotlib',
+  'tensorflow', 'torch', 'scikit-learn', 'keras',
+  'requests', 'httpx', 'aiohttp', 'beautifulsoup4',
+  'sqlalchemy', 'alembic', 'celery',
+  'serde', 'tokio', 'reqwest', 'clap',
+]);
+
+/**
+ * Group detected dependencies into categories.
+ *
+ * @param {object[]} ecosystems - Parsed ecosystem results from detectDependencies.
+ * @returns {{ frameworks: string[], coreLibraries: string[], buildTools: string[], devTools: string[], other: string[] }}
+ */
+export const groupDependencies = (ecosystems) => {
+  const groups = {
+    frameworks: [],
+    coreLibraries: [],
+    buildTools: [],
+    devTools: [],
+    other: [],
+  };
+
+  for (const eco of ecosystems) {
+    const allDeps = [...eco.dependencies, ...eco.devDependencies];
+
+    for (const dep of allDeps) {
+      const lower = dep.toLowerCase().split(/[:/]/)[0]; // handle scoped packages, Java groupId:artifactId
+
+      if (FRAMEWORK_NAMES.has(lower)) {
+        groups.frameworks.push(dep);
+      } else if (BUILD_TOOL_NAMES.has(lower)) {
+        groups.buildTools.push(dep);
+      } else if (DEV_TOOL_NAMES.has(lower)) {
+        groups.devTools.push(dep);
+      } else if (CORE_LIB_NAMES.has(lower)) {
+        groups.coreLibraries.push(dep);
+      } else {
+        groups.other.push(dep);
+      }
+    }
+  }
+
+  // Deduplicate each group
+  for (const key of Object.keys(groups)) {
+    groups[key] = [...new Set(groups[key])];
+  }
+
+  return groups;
+};
+

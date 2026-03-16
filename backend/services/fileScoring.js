@@ -138,10 +138,10 @@ export const scoreFile = (filePath) => {
  *
  * @param {string[]} filePaths - All file paths from the repo tree.
  * @param {string[]} aiSuggestedFiles - Files suggested by the AI (optional, get a bonus).
- * @param {number} topN - How many files to return (default 15).
+ * @param {number} topN - How many files to return (default 10).
  * @returns {{ path: string, score: number }[]} Scored and ranked files.
  */
-export const rankImportantFiles = (filePaths, aiSuggestedFiles = [], topN = 15) => {
+export const rankImportantFiles = (filePaths, aiSuggestedFiles = [], topN = 10) => {
   // Use a Set to deduplicate
   const uniquePaths = [...new Set(filePaths)];
   const aiSet = new Set(aiSuggestedFiles.map((f) => f.trim().toLowerCase()));
@@ -170,6 +170,6 @@ export const rankImportantFiles = (filePaths, aiSuggestedFiles = [], topN = 15) 
 /**
  * Returns just the file paths (no scores) for backward compatibility.
  */
-export const getTopImportantFiles = (filePaths, aiSuggestedFiles = [], topN = 15) => {
+export const getTopImportantFiles = (filePaths, aiSuggestedFiles = [], topN = 10) => {
   return rankImportantFiles(filePaths, aiSuggestedFiles, topN).map((f) => f.path);
 };
