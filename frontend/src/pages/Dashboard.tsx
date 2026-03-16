@@ -16,6 +16,7 @@ import Chat from '../components/Chat';
 import TabBar from '../components/TabBar';
 import ImportantFiles from '../components/ImportantFiles';
 import { useTabStore } from '../store/useTabStore';
+import Logo from '../components/Logo';
 import { theme as T } from '../lib/theme';
 
 const API_URL = 'https://sourcemind.onrender.com/api';
@@ -552,7 +553,7 @@ function AnalyzerView({ onSubmit }: { onSubmit: (url: string) => void }) {
         className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
         style={{ background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.15)' }}
       >
-        <Search className="w-10 h-10" style={{ color: T.accent }} />
+        <Logo size={40} />
       </div>
       <h2 className="text-2xl font-bold mb-1" style={{ color: T.text }}>Analyze a Repository</h2>
       <p className="text-sm mb-8 max-w-md text-center" style={{ color: T.muted }}>
@@ -638,7 +639,7 @@ function EmptyState({ onNewTab }: { onNewTab: () => void }) {
         className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
         style={{ background: 'rgba(37,99,235,0.08)', border: `1px solid rgba(37,99,235,0.15)` }}
       >
-        <Github className="w-10 h-10" style={{ color: T.accent }} />
+        <Logo size={40} />
       </div>
       <h2 className="text-2xl font-bold mb-2" style={{ color: T.text }}>No Repository Open</h2>
       <p className="text-sm mb-8 max-w-md" style={{ color: T.muted }}>

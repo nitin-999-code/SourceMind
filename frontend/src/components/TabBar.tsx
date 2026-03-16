@@ -1,4 +1,5 @@
-import { X, Plus, Github, Sparkles } from 'lucide-react';
+import { X, Plus, Github } from 'lucide-react';
+import Logo from './Logo';
 import { theme as T } from '../lib/theme';
 
 interface Tab {
@@ -78,7 +79,7 @@ export default function TabBar({ tabs, activeTabId, onSwitchTab, onCloseTab, onN
 
               {/* Tab icon */}
               {isAnalyzer ? (
-                <Sparkles className="w-3.5 h-3.5 shrink-0" style={{ color: isActive ? '#FBBF24' : T.muted }} />
+                <Logo size={16} />
               ) : (
                 !tab.isError && !tab.isLoading && (
                   <Github className="w-3.5 h-3.5 shrink-0" style={{ color: isActive ? T.accent : T.muted }} />
@@ -88,7 +89,7 @@ export default function TabBar({ tabs, activeTabId, onSwitchTab, onCloseTab, onN
               {/* Tab label */}
               <span className="truncate text-xs font-medium">
                 {isAnalyzer ? (
-                  <span style={{ color: isActive ? '#FBBF24' : T.muted }}>New Analysis</span>
+                  <span style={{ color: isActive ? T.accent : T.muted }}>New Analysis</span>
                 ) : tab.isLoading ? (
                   <span style={{ color: T.muted }}>Analyzing...</span>
                 ) : (
