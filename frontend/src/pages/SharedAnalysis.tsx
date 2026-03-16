@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { RepoContent, ErrorView } from './Dashboard';
 import { LoadingState } from '../components/LoadingState';
 import { theme as T } from '../lib/theme';
 import Chat from '../components/Chat';
+import { Share2, ArrowRight } from 'lucide-react';
 
 const API_URL = 'https://sourcemind.onrender.com/api';
 
@@ -88,6 +89,53 @@ export default function SharedAnalysis() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: T.bg, color: T.text, opacity: 1 }}>
+      {/* ═══════════ SHARED BANNER ═══════════ */}
+      <div 
+        className="w-full px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 border-b relative overflow-hidden"
+        style={{ 
+          background: 'linear-gradient(to right, rgba(10,26,47,0.9), rgba(15,35,63,0.9))', 
+          borderColor: T.border 
+        }}
+      >
+        {/* Subtle glow effect */}
+        <div 
+          className="absolute -top-10 -left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl mix-blend-screen pointer-events-none" 
+        />
+        
+        <div className="flex items-center gap-4 relative z-10">
+          <div 
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg border"
+            style={{ background: 'rgba(37,99,235,0.1)', borderColor: 'rgba(37,99,235,0.2)' }}
+          >
+            <Share2 className="w-5 h-5 text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-blue-400 mb-0.5">
+              Shared Repository Analysis
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-lg" style={{ color: T.text }}>
+                {owner} <span style={{ color: T.muted }}>/</span> {repo}
+              </span>
+            </div>
+            <p className="text-xs mt-0.5" style={{ color: T.muted }}>
+              This analysis was generated using SourceMind.
+            </p>
+          </div>
+        </div>
+        
+        <Link
+          to="/"
+          className="h-10 px-5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 relative z-10"
+          style={{ background: T.accent, color: '#fff', border: `1px solid ${T.accent}` }}
+          onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
+        >
+          Analyze Your Own Repository
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
+
       <div className="flex-1 pb-20">
         <RepoContent data={data} />
       </div>
