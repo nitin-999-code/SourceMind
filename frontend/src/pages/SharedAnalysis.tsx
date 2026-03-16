@@ -21,32 +21,44 @@ export default function SharedAnalysis() {
   const [chatExpanded, setChatExpanded] = useState(false);
 
   const fetchAnalysis = async () => {
+    if (!owner || !repo) {
+      setError('Invalid share link: Missing repository information.');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError('');
     setIsRateLimit(false);
+    
+    const url = `https://github.com/${owner}/${repo}`;
+    console.log("Share page repo:", url);
+
     try {
-      const url = `https://github.com/${owner}/${repo}`;
       const response = await axios.post(`${API_URL}/analyze`, { url });
+      console.log("Analysis result:", response.data);
       setData(response.data);
     } catch (err: any) {
       if (err.response?.status === 429 || err.response?.data?.errorType === 'RATE_LIMIT') {
         setIsRateLimit(true);
         setError(err.response?.data?.error || 'AI analysis is temporarily busy.');
       } else {
-        setError(err.response?.data?.error || err.message || 'Failed to analyze repository');
+        setError(err.response?.data?.error || err.message || 'Repository analysis failed');
       }
+      console.error("Analysis error:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (owner && repo) {
-      fetchAnalysis();
-    }
+    fetchAnalysis();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [owner, repo]);
 
-  if (loading) {
+  // Make sure we never render a blank screen.
+  // We show loading first if it's explicitly loading, OR if we have no data and no error yet.
+  if (loading || (!data && !error)) {
     return (
       <div className="min-h-screen flex flex-col pt-16" style={{ background: T.bg }}>
         <LoadingState />
@@ -54,6 +66,7 @@ export default function SharedAnalysis() {
     );
   }
 
+  // If there's an error, show it.
   if (error) {
     return (
       <div className="min-h-screen flex flex-col pt-16" style={{ background: T.bg }}>
@@ -62,7 +75,16 @@ export default function SharedAnalysis() {
     );
   }
 
-  if (!data) return null;
+  // Fallback safely to error if somehow data is still missing (should be impossible now).
+  if (!data) {
+     return (
+        <div className="min-h-screen flex flex-col pt-16" style={{ background: T.bg }}>
+          <ErrorView error={"Repository could not be analyzed."} onRetry={fetchAnalysis} />
+        </div>
+     );
+  }
+
+
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: T.bg, color: T.text, opacity: 1 }}>
