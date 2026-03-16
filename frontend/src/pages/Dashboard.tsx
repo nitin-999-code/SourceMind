@@ -18,6 +18,9 @@ import LandingAnalyzer from '../components/LandingAnalyzer';
 import { useTabStore } from '../store/useTabStore';
 import Logo from '../components/Logo';
 import { theme as T } from '../lib/theme';
+import { ArchitectureGraph } from '../components/ArchitectureGraph';
+import { ShareModal } from '../components/ShareModal';
+import { Share2 } from 'lucide-react';
 
 const API_URL = 'https://sourcemind.onrender.com/api';
 
@@ -129,7 +132,8 @@ function SectionCard({ icon: Icon, title, iconColor, accentBar, children, copyTe
 }
 
 /* ═══════════════ REPO CONTENT (single tab view) ═══════════════ */
-function RepoContent({ data }: { data: any }) {
+export function RepoContent({ data }: { data: any }) {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const formattedDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(data.metadata.lastUpdated));
 
   return (
@@ -192,8 +196,25 @@ function RepoContent({ data }: { data: any }) {
             <Github className="w-4 h-4" />
             View on GitHub
           </a>
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200"
+            style={{ background: T.accent, color: '#fff', border: `1px solid ${T.accent}` }}
+            onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
+          >
+            <Share2 className="w-4 h-4" />
+            Share Analysis
+          </button>
         </div>
       </div>
+      
+      <ShareModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+        repoOwner={data.metadata.owner} 
+        repoName={data.metadata.name} 
+      />
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
@@ -222,6 +243,16 @@ function RepoContent({ data }: { data: any }) {
             <MarkdownViewer content={data.architecture} />
           </SectionCard>
         </div>
+
+        {/* ═══════════ ROW 1.5: Architecture Diagram ═══════════ */}
+        <SectionCard
+          icon={Network}
+          title="Architecture Diagram"
+          iconColor="#818CF8"
+          accentBar={`linear-gradient(to right, #818CF8, #6366F1)`}
+        >
+          <ArchitectureGraph data={data} />
+        </SectionCard>
 
         {/* ═══════════ ENTRY POINTS & CORE MODULES ═══════════ */}
         {(data.primaryEntry || (data.coreModules && data.coreModules.length > 0)) && (
@@ -456,7 +487,7 @@ function RepoContent({ data }: { data: any }) {
 }
 
 /* ═══════════════ ERROR VIEW ═══════════════ */
-function ErrorView({ error, onRetry, isRateLimit = false }: { error: string; onRetry: () => void; isRateLimit?: boolean }) {
+export function ErrorView({ error, onRetry, isRateLimit = false }: { error: string; onRetry: () => void; isRateLimit?: boolean }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4" style={{ background: T.bg }}>
       <div className="relative mb-6" style={{ padding: 20, background: isRateLimit ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)', borderRadius: '50%' }}>
