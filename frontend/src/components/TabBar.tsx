@@ -1,4 +1,4 @@
-import { X, Plus, Github } from 'lucide-react';
+import { X, Plus, Github, Star } from 'lucide-react';
 import Logo from './Logo';
 import { theme as T } from '../lib/theme';
 
@@ -149,6 +149,20 @@ export default function TabBar({ tabs, activeTabId, onSwitchTab, onCloseTab, onN
           <Plus className="w-4 h-4" />
         </button>
       </div>
+
+      {/* ── Star on GitHub — right side ── */}
+      <a
+        href="https://github.com/nitin-999-code/SourceMind"
+        target="_blank"
+        rel="noreferrer"
+        className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 mr-3 rounded-lg transition-colors duration-200 self-center"
+        style={{ color: T.muted, border: `1px solid ${T.border}` }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#FBBF24'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.muted; }}
+      >
+        <Star className="w-3.5 h-3.5" />
+        Star on GitHub
+      </a>
     </div>
   );
 }
