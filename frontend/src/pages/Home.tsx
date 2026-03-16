@@ -120,12 +120,12 @@ export default function Home() {
         <FloatIcon icon={Cpu}      style={{ top: '68%', right: '12%', animationDelay: '1s', animationDuration: '7s' }} />
 
         <div className="max-w-3xl mx-auto text-center relative">
-          {/* Badge */}
+          {/* Big Logo */}
           <div
-            className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-medium mb-8 opacity-0 animate-fade-up"
-            style={{ animationDelay: '0.1s', animationFillMode: 'forwards', background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.2)', color: '#60A5FA' }}
+            className="inline-flex items-center justify-center mb-8 opacity-0 animate-fade-up"
+            style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}
           >
-            <Sparkles className="w-3 h-3" /> AI-powered code intelligence
+            <Logo size={48} />
           </div>
 
           {/* Headline */}
