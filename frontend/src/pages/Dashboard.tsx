@@ -681,22 +681,24 @@ export default function Dashboard() {
         ) : activeTab.data ? (
           <div className="flex-1 pb-20">
             <RepoContent data={activeTab.data} />
-
-            {/* Per-tab Chat */}
-            <Chat
-              repoId={activeTab.data.repoId}
-              repoName={activeTab.repoName}
-              messages={activeTab.chatMessages}
-              onMessagesChange={(msgs) => updateTabChat(activeTab.id, msgs)}
-              isOpen={activeTab.chatOpen}
-              onOpenChange={(open) => setChatOpen(activeTab.id, open)}
-              isExpanded={activeTab.chatExpanded}
-              onExpandedChange={(expanded) => setChatExpanded(activeTab.id, expanded)}
-            />
           </div>
         ) : null
       ) : (
         <EmptyState onNewTab={handleNewAnalyzerTab} />
+      )}
+
+      {/* Per-tab Chat — rendered outside scroll container so FAB is always visible */}
+      {activeTab && activeTab.data && activeTab.tabType === 'repo' && (
+        <Chat
+          repoId={activeTab.data.repoId}
+          repoName={activeTab.repoName}
+          messages={activeTab.chatMessages}
+          onMessagesChange={(msgs) => updateTabChat(activeTab.id, msgs)}
+          isOpen={activeTab.chatOpen}
+          onOpenChange={(open) => setChatOpen(activeTab.id, open)}
+          isExpanded={activeTab.chatExpanded}
+          onExpandedChange={(expanded) => setChatExpanded(activeTab.id, expanded)}
+        />
       )}
     </div>
   );
