@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { MessageSquare, X, Send, Loader2, Maximize2, Minimize2, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -74,10 +75,10 @@ export default function Chat({
 
   /* ─── FAB Button ─── */
   if (!isOpen) {
-    return (
+    return createPortal(
       <button 
         onClick={() => onOpenChange(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full flex items-center justify-center z-50 transition-all duration-200 hover:scale-105"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full flex items-center justify-center z-[9999] transition-all duration-200 hover:scale-105"
         style={{
           background: `linear-gradient(135deg, ${T.accent}, #3B82F6)`,
           boxShadow: `0 4px 20px rgba(37,99,235,0.4)`,
@@ -85,7 +86,8 @@ export default function Chat({
         }}
       >
         <MessageSquare className="w-6 h-6" />
-      </button>
+      </button>,
+      document.body
     );
   }
 
@@ -103,10 +105,10 @@ export default function Chat({
     </button>
   );
 
-  return (
+  return createPortal(
     <div
       className={cn(
-        "fixed right-6 bottom-6 rounded-2xl flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out",
+        "fixed right-6 bottom-6 rounded-2xl flex flex-col overflow-hidden z-[9999] transition-all duration-300 ease-in-out",
         isExpanded ? "w-[40rem] h-[80vh] sm:w-[50rem] sm:h-[90vh]" : "w-96 h-[32rem]"
       )}
       style={{
@@ -265,6 +267,7 @@ export default function Chat({
           </button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
