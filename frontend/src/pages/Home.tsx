@@ -4,7 +4,7 @@ import {
   Github, ArrowRight, Sparkles, Network,
   Box, FolderTree, Cpu, MessageSquare,
   Code2, Terminal, Braces, Search,
-  BarChart3, GitBranch, Layers, ChevronRight
+  BarChart3, GitBranch, Layers, ChevronRight, Star
 } from 'lucide-react';
 import { theme as P } from '../lib/theme';
 import Logo from '../components/Logo';
@@ -89,7 +89,7 @@ export default function Home() {
             <span className="text-sm font-semibold tracking-tight" style={{ color: P.text }}>SourceMind</span>
           </div>
           <a
-            href="https://github.com"
+            href="https://github.com/nitin-999-code/SourceMind"
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors duration-200"
@@ -97,8 +97,8 @@ export default function Home() {
             onMouseEnter={(e) => { e.currentTarget.style.background = P.glass; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
-            <Github className="w-3.5 h-3.5" />
-            GitHub
+            <Star className="w-3.5 h-3.5" />
+            Star on GitHub
           </a>
         </div>
       </nav>
