@@ -5,6 +5,7 @@ import { MessageSquare, X, Send, Loader2, Maximize2, Minimize2, Trash2 } from 'l
 import { cn } from '../lib/utils';
 import { MarkdownViewer } from './MarkdownViewer';
 import { CopyButton } from './CopyButton';
+import Logo from './Logo';
 import type { ChatMessage } from '../store/useTabStore';
 import { theme as T } from '../lib/theme';
 
@@ -78,14 +79,16 @@ export default function Chat({
     return createPortal(
       <button 
         onClick={() => onOpenChange(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full flex items-center justify-center z-[9999] transition-all duration-200 hover:scale-105"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full flex items-center justify-center z-[9999] transition-all duration-200 ease-out hover:scale-105 shadow-lg"
         style={{
-          background: `linear-gradient(135deg, ${T.accent}, #3B82F6)`,
-          boxShadow: `0 4px 20px rgba(37,99,235,0.4)`,
-          color: '#fff',
+          background: T.card,
+          color: T.text,
+          border: '1px solid rgba(255,255,255,0.08)'
         }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = '#181818'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = T.card; }}
       >
-        <MessageSquare className="w-6 h-6" />
+        <Logo size={24} color="#FFFFFF" />
       </button>,
       document.body
     );
@@ -108,19 +111,17 @@ export default function Chat({
   return createPortal(
     <div
       className={cn(
-        "fixed right-6 bottom-6 rounded-2xl flex flex-col overflow-hidden z-[9999] transition-all duration-300 ease-in-out",
+        "fixed right-6 bottom-6 rounded-2xl flex flex-col overflow-hidden z-[9999] transition-all duration-300 ease-in-out border border-white/5 backdrop-blur-sm shadow-lg shadow-black/50",
         isExpanded ? "w-[40rem] h-[80vh] sm:w-[50rem] sm:h-[90vh]" : "w-96 h-[32rem]"
       )}
       style={{
-        background: T.card,
-        border: `1px solid ${T.border}`,
-        boxShadow: '0 16px 48px rgba(0,0,0,0.5)',
+        background: 'rgba(20, 20, 20, 0.95)',
       }}
     >
       {/* Header */}
       <div
-        className="px-4 py-3 flex items-center justify-between shrink-0"
-        style={{ background: `linear-gradient(135deg, ${T.accent}, #3B82F6)` }}
+        className="px-4 py-3 flex items-center justify-between shrink-0 border-b border-border/50"
+        style={{ background: 'transparent' }}
       >
         <div className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-white" />
@@ -151,13 +152,13 @@ export default function Chat({
               style={
                 msg.role === 'user'
                   ? {
-                      background: T.accent,
-                      color: '#fff',
+                      background: '#FFFFFF',
+                      color: '#0A0A0A',
                       borderTopRightRadius: 4,
                       maxWidth: '85%',
                     }
                   : {
-                      background: T.card,
+                      background: 'transparent',
                       color: T.text,
                       border: `1px solid ${T.border}`,
                       borderTopLeftRadius: 4,
@@ -214,9 +215,9 @@ export default function Chat({
                      border: `1px solid ${T.border}`,
                    }}
                    onMouseEnter={(e) => {
-                     e.currentTarget.style.background = 'rgba(37,99,235,0.1)';
-                     e.currentTarget.style.borderColor = 'rgba(37,99,235,0.3)';
-                     e.currentTarget.style.color = '#60A5FA';
+                     e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                     e.currentTarget.style.color = '#FFFFFF';
                    }}
                    onMouseLeave={(e) => {
                      e.currentTarget.style.background = T.card;
@@ -242,26 +243,25 @@ export default function Chat({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about the codebase..."
-            className="flex-1 h-11 rounded-full pl-4 pr-12 text-sm outline-none"
+            className="flex-1 h-11 rounded-full pl-4 pr-12 text-sm outline-none transition-all duration-200"
             style={{
               background: T.bgSec,
               border: `1px solid ${T.border}`,
               color: T.text,
-              caretColor: T.accent,
             }}
-            onFocus={(e) => { e.target.style.borderColor = 'rgba(37,99,235,0.4)'; }}
+            onFocus={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.2)'; }}
             onBlur={(e) => { e.target.style.borderColor = T.border; }}
           />
           <button 
             type="submit" 
             disabled={!input.trim() || loading}
-            className="absolute right-1 top-1 h-9 w-9 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-40"
+            className="absolute right-1 top-1 h-9 w-9 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-40 active:scale-95"
             style={{
-              background: T.accent,
-              color: '#fff',
+              background: '#FFFFFF',
+              color: '#0A0A0A',
             }}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = T.accentH; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
+            onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = '#E5E5E5'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; }}
           >
             <Send className="w-4 h-4 ml-0.5 mt-0.5" />
           </button>

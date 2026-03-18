@@ -200,7 +200,7 @@ export function RepoContent({ data, isSharedView = false }: { data: any, isShare
             <button
               onClick={() => setIsShareModalOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200"
-              style={{ background: T.accent, color: '#fff', border: `1px solid ${T.accent}` }}
+              style={{ background: T.accent, color: '#0A0A0A', border: `1px solid ${T.accent}` }}
               onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
             >
@@ -535,7 +535,7 @@ export function ErrorView({ error, onRetry, isRateLimit = false }: { error: stri
             <button
               onClick={onRetry}
               className="h-11 px-6 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg"
-              style={{ background: T.accent, color: '#fff' }}
+              style={{ background: T.accent, color: '#0A0A0A' }}
               onMouseEnter={(e) => { e.currentTarget.style.background = T.accentH; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
             >
@@ -567,7 +567,7 @@ function EmptyState({ onNewTab }: { onNewTab: () => void }) {
       <button
         onClick={onNewTab}
         className="h-12 px-8 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-        style={{ background: T.accent, color: '#fff' }}
+        style={{ background: T.accent, color: '#0A0A0A' }}
         onMouseEnter={(e) => { e.currentTarget.style.background = T.accentH; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; }}
       >

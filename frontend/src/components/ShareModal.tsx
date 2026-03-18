@@ -64,7 +64,7 @@ export function ShareModal({
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative w-full max-w-[520px] p-6 rounded-2xl shadow-2xl border flex flex-col gap-6"
+            className="relative w-full max-w-[520px] p-6 rounded-2xl shadow-lg border flex flex-col gap-6"
             style={{ background: T.card, border: `1px solid ${T.border}` }}
             onClick={(e) => e.stopPropagation()}
           >

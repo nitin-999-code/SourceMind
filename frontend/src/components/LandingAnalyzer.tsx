@@ -37,7 +37,7 @@ function Card({ icon: Icon, title, desc, delay }: {
       style={{ animationDelay: delay, animationFillMode: 'forwards' }}
     >
       <div
-        className="rounded-2xl p-7 h-full transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl"
+        className="rounded-2xl p-7 h-full transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg"
         style={{ background: P.surface, border: `1px solid ${P.border}` }}
       >
         <div
@@ -152,7 +152,7 @@ export default function LandingAnalyzer({ onSubmit }: { onSubmit: (url: string) 
               <button
                 type="submit"
                 className="h-11 px-6 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg shrink-0"
-                style={{ background: P.accent, color: '#fff' }}
+                style={{ background: P.accent, color: '#0A0A0A' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = P.accentH; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = P.accent; }}
               >

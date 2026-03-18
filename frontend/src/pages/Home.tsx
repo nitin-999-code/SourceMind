@@ -34,7 +34,7 @@ function Card({ icon: Icon, title, desc, delay }: {
       style={{ animationDelay: delay, animationFillMode: 'forwards' }}
     >
       <div
-        className="rounded-2xl p-7 h-full transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl"
+        className="rounded-2xl p-7 h-full transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg"
         style={{ background: P.surface, border: `1px solid ${P.border}` }}
       >
         <div
@@ -167,7 +167,7 @@ export default function Home() {
               <button
                 type="submit"
                 className="h-11 px-6 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg shrink-0"
-                style={{ background: P.accent, color: '#fff' }}
+                style={{ background: P.accent, color: '#0A0A0A' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = P.accentH; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = P.accent; }}
               >
@@ -410,7 +410,7 @@ export default function Home() {
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="inline-flex items-center gap-2 h-12 px-8 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-            style={{ background: P.accent, color: '#fff' }}
+            style={{ background: P.accent, color: '#0A0A0A' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = P.accentH; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = P.accent; }}
           >

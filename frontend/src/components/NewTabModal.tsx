@@ -98,7 +98,7 @@ export default function NewTabModal({ isOpen, onClose, onSubmit }: NewTabModalPr
                 type="submit"
                 disabled={!url.trim()}
                 className="h-10 px-5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-200 disabled:opacity-40 shrink-0"
-                style={{ background: T.accent, color: '#fff' }}
+                style={{ background: T.accent, color: '#0A0A0A' }}
                 onMouseEnter={(e) => {
                   if (!e.currentTarget.disabled) e.currentTarget.style.background = T.accentH;
                 }}

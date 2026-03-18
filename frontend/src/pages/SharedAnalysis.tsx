@@ -104,14 +104,11 @@ export default function SharedAnalysis() {
       <div 
         className="w-full px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 border-b relative overflow-hidden"
         style={{ 
-          background: 'linear-gradient(to right, rgba(10,26,47,0.9), rgba(15,35,63,0.9))', 
+          background: T.card, 
           borderColor: T.border 
         }}
       >
-        {/* Subtle glow effect */}
-        <div 
-          className="absolute -top-10 -left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl mix-blend-screen pointer-events-none" 
-        />
+
         
         <div className="flex items-center gap-4 relative z-10">
           <div 
@@ -141,7 +138,7 @@ export default function SharedAnalysis() {
       {/* ═══════════ ANALYZE ANOTHER REPO CTA ═══════════ */}
       <div 
         className="w-full px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b"
-        style={{ background: 'rgba(10,26,47,0.4)', borderColor: T.border }}
+        style={{ background: T.bgSec, borderColor: T.border }}
       >
         <span className="text-sm font-medium" style={{ color: T.text }}>
           Analyze Another Repository
@@ -163,7 +160,7 @@ export default function SharedAnalysis() {
             <button
               type="submit"
               className="h-8 px-4 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 shrink-0"
-              style={{ background: T.accent, color: '#fff' }}
+              style={{ background: T.accent, color: '#0A0A0A' }}
               onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
             >

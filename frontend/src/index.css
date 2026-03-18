@@ -4,35 +4,35 @@
 
 @layer base {
   :root {
-    --background: 215 63% 11%;      /* #0A1A2F */
-    --foreground: 210 40% 96%;      /* #F1F5F9 */
+    --background: 0 0% 4%;      /* #0A0A0A */
+    --foreground: 0 0% 100%;    /* #FFFFFF */
 
-    --card: 213 43% 19%;            /* #162B4A */
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 8%;            /* #141414 */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 213 43% 19%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 217 91% 60%;         /* #2563EB */
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 98%;        /* White */
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 215 50% 15%;       /* #0F243D */
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 0 0% 10%;      /* #1A1A1A for hover etc */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 215 50% 15%;           /* #0F243D */
-    --muted-foreground: 215 16% 65%; /* #94A3B8 */
+    --muted: 0 0% 10%;          /* #1A1A1A */
+    --muted-foreground: 0 0% 60%; /* rgba(255,255,255,0.6) */
 
-    --accent: 217 91% 60%;          /* #2563EB */
+    --accent: 0 0% 10%;         /* #1A1A1A */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 215 30% 18%;          /* rgba(255,255,255,0.08) equivalent */
-    --input: 215 30% 18%;
-    --ring: 217 91% 60%;            /* #2563EB */
+    --border: 0 0% 12%;         /* rgba(255,255,255,0.06) equivalent visually */
+    --input: 0 0% 12%;
+    --ring: 0 0% 40%;           /* Soft focus ring */
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;           /* max rounded-xl for sharp look */
   }
 }
 
@@ -42,7 +42,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background: #0A1A2F;
+    background: hsl(var(--background));
   }
 }
 
